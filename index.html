@@ -62,8 +62,6 @@
 
   .panel{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px; box-shadow:var(--shadow);}
   .panel h2{font-size:12.5px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin:0 0 12px; display:flex; align-items:center; gap:6px;}
-  .panel-head-row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;}
-  .panel-head-row h2{margin:0;}
 
   .product-row{
     display:flex; align-items:center; justify-content:space-between;
@@ -199,7 +197,7 @@
   .bar-fill{background:var(--accent); height:100%;}
   .bar-val{font-family:var(--mono); font-size:11px; color:var(--muted); width:70px; text-align:right;}
 
-  .empty-note{color:var(--muted); font-size:13px; text-align:center; padding:22px;}
+  .empty-note{color:var(--muted); font-size:13.3px; text-align:center; padding:22px;}
 
   .scan-note{color:var(--muted); font-size:12.5px; line-height:1.6; margin:0 0 14px;}
   .scan-upload-btn{
@@ -207,16 +205,26 @@
     padding:12px 20px; font-weight:700; font-size:14px; cursor:pointer; transition:transform .1s; text-align:center;
   }
   .scan-upload-btn:hover{transform:translateY(-1px);}
-  .scan-upload-btn.small{padding:8px 14px; font-size:12.5px;}
 
-  /* Yangi Oq Skanerlash Tugmasi */
+  .mode-switch{
+    display:flex; background:var(--bg); border:1px solid var(--line);
+    border-radius:10px; padding:3px; margin-bottom:14px;
+  }
+  .mode-switch-btn{
+    flex:1; background:none; border:none; color:var(--muted); font-family:var(--sans);
+    font-size:12.5px; font-weight:600; padding:8px 12px; border-radius:7px; cursor:pointer;
+    transition:all .18s ease; display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .mode-switch-btn.active{
+    background:var(--surface-2); color:var(--accent); border:1px solid var(--accent-dim); box-shadow:0 2px 6px rgba(0,0,0,.2);
+  }
+
   .white-scan-btn{
     background:#ffffff; color:#18160f; border:none; font-weight:700; border-radius:9px;
     padding:12px 20px; font-size:14px; cursor:pointer; transition:opacity .15s; margin-top:8px; display:inline-block; width:100%; text-align:center;
   }
   .white-scan-btn:hover{opacity:0.9;}
 
-  /* Live Stream Kamera Stili */
   .camera-container{
     position:relative; width:100%; max-width:400px; background:#000; border-radius:12px; overflow:hidden; border:1px solid var(--line); margin-top:10px; display:none;
   }
@@ -291,15 +299,30 @@
       </div>
     </div>
 
+    <!-- KASSA UCHUN IKKI REJIMLI SKANER -->
     <div class="panel" style="margin-top:16px;">
-      <div class="panel-head-row">
-        <h2>Tez skanerlash</h2>
-        <label class="scan-upload-btn small" for="kassaScanInput">📷 Rasm yuklash</label>
+      <h2>Tez skanerlash (AI)</h2>
+      <div class="mode-switch">
+        <button type="button" class="mode-switch-btn active" id="kassaBtnModeFile" onclick="setCameraMode('file', 'kassa')">📁 Standard (Surat/Fayl)</button>
+        <button type="button" class="mode-switch-btn" id="kassaBtnModeLive" onclick="setCameraMode('live', 'kassa')">📹 Jonli Kamera</button>
       </div>
-      <input type="file" id="kassaScanInput" accept="image/*" capture="environment" onchange="handleScanFile(this,'kassa')" style="display:none;">
+
+      <div class="camera-container" id="kassaCameraWrap">
+        <video id="kassaWebcamVideo" autoplay playsinline></video>
+      </div>
+
+      <button type="button" class="white-scan-btn" id="kassaSnapAndScanBtn" style="display:none;" onclick="snapAndScan('kassa')">📸 Suratga olish va qidirish</button>
+
+      <div id="kassaFileScanContainer">
+        <label class="scan-upload-btn" for="kassaScanInput" style="width:100%; text-align:center;">📷 Suratga olish / rasm tanlash</label>
+        <input type="file" id="kassaScanInput" accept="image/*" capture="environment" onchange="handleScanFile(this,'kassa')" style="display:none;">
+      </div>
+
       <div class="scan-preview" id="kassaScanPreviewWrap"></div>
       <div class="scan-status" id="kassaScanStatus"></div>
-      <div id="kassaScanResultsPanel" style="display:none; margin-top:8px;">
+      
+      <div id="kassaScanResultsPanel" style="display:none; margin-top:12px;">
+        <h2 style="font-size:11px;">Topilgan mahsulotlar:</h2>
         <div id="kassaScanResults"></div>
       </div>
     </div>
@@ -344,26 +367,19 @@
       <h2>Linoleumni skanerlash (Local AI)</h2>
       <p class="scan-note">Kamerani namunaga qarating va oq tugma yordamida suratga oling — ombordagi <strong>rasmi biriktirilgan</strong> mahsulotlar bilan solishtiriladi.</p>
       
-      <!-- Kamera Rejimini Tanlash -->
-      <div class="field" style="margin-bottom:12px;">
-        <label>Kamera rejimi</label>
-        <select id="cameraModeSelect" onchange="toggleCameraMode(this.value)">
-          <option value="file">Oddiy (Standart surat olish/Rasm yuklash)</option>
-          <option value="live">Jonli Kamera (Kamera doimiy ochiq tursin)</option>
-        </select>
+      <div class="mode-switch">
+        <button type="button" class="mode-switch-btn active" id="btnModeFile" onclick="setCameraMode('file', 'skaner')">📁 Standard (Surat/Fayl)</button>
+        <button type="button" class="mode-switch-btn" id="btnModeLive" onclick="setCameraMode('live', 'skaner')">📹 Jonli Kamera</button>
       </div>
 
-      <!-- Live Video Stream -->
       <div class="camera-container" id="cameraWrap">
         <video id="webcamVideo" autoplay playsinline></video>
       </div>
 
-      <!-- Oq Tugma: Jonli kameradan surat olib izlash -->
-      <button type="button" class="white-scan-btn" id="snapAndScanBtn" style="display:none;" onclick="snapAndScan()">📸 Suratga olish va qidirish</button>
+      <button type="button" class="white-scan-btn" id="snapAndScanBtn" style="display:none;" onclick="snapAndScan('skaner')">📸 Suratga olish va qidirish</button>
 
-      <!-- Standard Fayl Tanlash Rejimi -->
       <div id="fileScanContainer">
-        <label class="scan-upload-btn" for="scanInput">📷 Suratga olish / rasm tanlash</label>
+        <label class="scan-upload-btn" for="scanInput" style="width:100%; text-align:center;">📷 Suratga olish / rasm tanlash</label>
         <input type="file" id="scanInput" accept="image/*" capture="environment" onchange="handleScanFile(this,'skaner')" style="display:none;">
       </div>
 
@@ -428,9 +444,31 @@
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
 <script>
+if ('serviceWorker' in navigator) {
+  const swCode = `
+    const CACHE_NAME = 'ai-model-cache-v1';
+    self.addEventListener('fetch', (event) => {
+      if (event.request.url.includes('cdn.jsdelivr.net') || event.request.url.includes('tfhub.dev')) {
+        event.respondWith(
+          caches.open(CACHE_NAME).then((cache) => {
+            return cache.match(event.request).then((response) => {
+              return response || fetch(event.request).then((networkResponse) => {
+                cache.put(event.request, networkResponse.clone());
+                return networkResponse;
+              });
+            });
+          })
+        );
+      }
+    });
+  `;
+  const blob = new Blob([swCode], { type: 'application/javascript' });
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl).catch(err => console.log('SW error:', err));
+}
+
 const fmt = n => new Intl.NumberFormat('uz-UZ').format(Math.round(n));
 
-// Brauzer xotirasi (localStorage)
 const localStore = {
   async get(key){
     try{
@@ -916,23 +954,31 @@ async function getProductEmbedding(product){
   return embedding;
 }
 
-// ---------- LIVE KAMERA VA SKANER ----------
+// ---------- KAMERA VA REJIM BTN ----------
 const SCAN_CTX = {
   skaner: { preview: 'scanPreviewWrap', status: 'scanStatus', resultsPanel: 'scanResultsPanel', results: 'scanResults' },
   kassa:  { preview: 'kassaScanPreviewWrap', status: 'kassaScanStatus', resultsPanel: 'kassaScanResultsPanel', results: 'kassaScanResults' }
 };
 
-async function toggleCameraMode(mode){
-  const cameraWrap = document.getElementById('cameraWrap');
-  const snapBtn = document.getElementById('snapAndScanBtn');
-  const fileContainer = document.getElementById('fileScanContainer');
+function setCameraMode(mode, context = 'skaner'){
+  const isKassa = context === 'kassa';
+  const btnFile = document.getElementById(isKassa ? 'kassaBtnModeFile' : 'btnModeFile');
+  const btnLive = document.getElementById(isKassa ? 'kassaBtnModeLive' : 'btnModeLive');
+  const cameraWrap = document.getElementById(isKassa ? 'kassaCameraWrap' : 'cameraWrap');
+  const snapBtn = document.getElementById(isKassa ? 'kassaSnapAndScanBtn' : 'snapAndScanBtn');
+  const fileContainer = document.getElementById(isKassa ? 'kassaFileScanContainer' : 'fileScanContainer');
+  const videoId = isKassa ? 'kassaWebcamVideo' : 'webcamVideo';
 
   if(mode === 'live'){
+    btnFile.classList.remove('active');
+    btnLive.classList.add('active');
     fileContainer.style.display = 'none';
     cameraWrap.style.display = 'block';
     snapBtn.style.display = 'block';
-    startLiveCamera();
+    startLiveCamera(videoId);
   } else {
+    btnLive.classList.remove('active');
+    btnFile.classList.add('active');
     stopLiveCamera();
     cameraWrap.style.display = 'none';
     snapBtn.style.display = 'none';
@@ -940,13 +986,14 @@ async function toggleCameraMode(mode){
   }
 }
 
-async function startLiveCamera(){
+async function startLiveCamera(videoId = 'webcamVideo'){
+  stopLiveCamera();
   try{
     cameraStream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 640 } }
     });
-    const video = document.getElementById('webcamVideo');
-    video.srcObject = cameraStream;
+    const video = document.getElementById(videoId);
+    if(video) video.srcObject = cameraStream;
   }catch(e){
     showToast("Kamerani ochish imkoni bo'lmadi: " + e.message);
   }
@@ -959,8 +1006,9 @@ function stopLiveCamera(){
   }
 }
 
-async function snapAndScan(){
-  const video = document.getElementById('webcamVideo');
+async function snapAndScan(context = 'skaner'){
+  const isKassa = context === 'kassa';
+  const video = document.getElementById(isKassa ? 'kassaWebcamVideo' : 'webcamVideo');
   if(!video || !video.videoWidth) return;
 
   const canvas = document.createElement('canvas');
@@ -970,8 +1018,9 @@ async function snapAndScan(){
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
   const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
 
-  document.getElementById('scanPreviewWrap').innerHTML = `<img src="${dataUrl}">`;
-  await performScan(dataUrl, 'skaner');
+  const previewId = isKassa ? 'kassaScanPreviewWrap' : 'scanPreviewWrap';
+  document.getElementById(previewId).innerHTML = `<img src="${dataUrl}">`;
+  await performScan(dataUrl, context);
 }
 
 async function handleScanFile(input, context){
@@ -1282,9 +1331,7 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('view-' + btn.dataset.view).classList.add('active');
-    if(btn.dataset.view !== 'skaner'){
-      stopLiveCamera();
-    }
+    stopLiveCamera();
   });
 });
 
