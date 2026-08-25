@@ -204,10 +204,24 @@
   .scan-note{color:var(--muted); font-size:12.5px; line-height:1.6; margin:0 0 14px;}
   .scan-upload-btn{
     display:inline-block; background:var(--accent); color:#1c1a17; border-radius:9px;
-    padding:12px 20px; font-weight:700; font-size:14px; cursor:pointer; transition:transform .1s;
+    padding:12px 20px; font-weight:700; font-size:14px; cursor:pointer; transition:transform .1s; text-align:center;
   }
   .scan-upload-btn:hover{transform:translateY(-1px);}
   .scan-upload-btn.small{padding:8px 14px; font-size:12.5px;}
+
+  /* Yangi Oq Skanerlash Tugmasi */
+  .white-scan-btn{
+    background:#ffffff; color:#18160f; border:none; font-weight:700; border-radius:9px;
+    padding:12px 20px; font-size:14px; cursor:pointer; transition:opacity .15s; margin-top:8px; display:inline-block; width:100%; text-align:center;
+  }
+  .white-scan-btn:hover{opacity:0.9;}
+
+  /* Live Stream Kamera Stili */
+  .camera-container{
+    position:relative; width:100%; max-width:400px; background:#000; border-radius:12px; overflow:hidden; border:1px solid var(--line); margin-top:10px; display:none;
+  }
+  .camera-container video{ width:100%; height:auto; display:block; }
+
   .scan-preview img{width:130px; height:130px; object-fit:cover; border-radius:9px; border:1px solid var(--line); margin-top:12px;}
   .scan-status{margin-top:10px; font-size:12.5px; color:var(--muted); font-family:var(--mono);}
   .scan-result-row{
@@ -217,7 +231,6 @@
   .scan-result-thumb{width:50px; height:50px; border-radius:9px; object-fit:cover; border:1px solid var(--line); flex-shrink:0;}
   .scan-result-info{flex:1; min-width:0;}
   .scan-result-name{font-weight:600; font-size:13.5px;}
-  .scan-result-reason{font-size:11.5px; color:var(--muted); margin-top:2px;}
   .scan-score-track{background:var(--surface-2); border-radius:4px; height:6px; margin-top:6px; overflow:hidden;}
   .scan-score-fill{background:var(--accent); height:100%;}
   .scan-score-pct{font-family:var(--mono); font-size:12.5px; color:var(--accent); width:38px; text-align:right; flex-shrink:0;}
@@ -281,7 +294,7 @@
     <div class="panel" style="margin-top:16px;">
       <div class="panel-head-row">
         <h2>Tez skanerlash</h2>
-        <label class="scan-upload-btn small" for="kassaScanInput">📷 Skanerlash</label>
+        <label class="scan-upload-btn small" for="kassaScanInput">📷 Rasm yuklash</label>
       </div>
       <input type="file" id="kassaScanInput" accept="image/*" capture="environment" onchange="handleScanFile(this,'kassa')" style="display:none;">
       <div class="scan-preview" id="kassaScanPreviewWrap"></div>
@@ -329,12 +342,35 @@
   <div class="view" id="view-skaner">
     <div class="panel">
       <h2>Linoleumni skanerlash (Local AI)</h2>
-      <p class="scan-note">Kamerani namunaga qarating va suratga oling — ombordagi <strong>rasmi biriktirilgan</strong> mahsulotlar bilan solishtirilib, eng o'xshash 5 tasi ko'rsatiladi. Solishtirish butunlay shu qurilmada, brauzerda ishlaydi — hech qanday rasm tashqariga (internetga, API'ga) yuborilmaydi, API kalit shart emas, pul sarflanmaydi. Birinchi skanerlashda AI modeli (~5-10 MB) bir marta yuklab olinadi, keyin tezroq ishlaydi. Aniqlik taxminiy — kod/QR usuliga qaraganda kamroq ishonchli.</p>
-      <label class="scan-upload-btn" for="scanInput">📷 Suratga olish / rasm tanlash</label>
-      <input type="file" id="scanInput" accept="image/*" capture="environment" onchange="handleScanFile(this,'skaner')" style="display:none;">
+      <p class="scan-note">Kamerani namunaga qarating va oq tugma yordamida suratga oling — ombordagi <strong>rasmi biriktirilgan</strong> mahsulotlar bilan solishtiriladi.</p>
+      
+      <!-- Kamera Rejimini Tanlash -->
+      <div class="field" style="margin-bottom:12px;">
+        <label>Kamera rejimi</label>
+        <select id="cameraModeSelect" onchange="toggleCameraMode(this.value)">
+          <option value="file">Oddiy (Standart surat olish/Rasm yuklash)</option>
+          <option value="live">Jonli Kamera (Kamera doimiy ochiq tursin)</option>
+        </select>
+      </div>
+
+      <!-- Live Video Stream -->
+      <div class="camera-container" id="cameraWrap">
+        <video id="webcamVideo" autoplay playsinline></video>
+      </div>
+
+      <!-- Oq Tugma: Jonli kameradan surat olib izlash -->
+      <button type="button" class="white-scan-btn" id="snapAndScanBtn" style="display:none;" onclick="snapAndScan()">📸 Suratga olish va qidirish</button>
+
+      <!-- Standard Fayl Tanlash Rejimi -->
+      <div id="fileScanContainer">
+        <label class="scan-upload-btn" for="scanInput">📷 Suratga olish / rasm tanlash</label>
+        <input type="file" id="scanInput" accept="image/*" capture="environment" onchange="handleScanFile(this,'skaner')" style="display:none;">
+      </div>
+
       <div class="scan-preview" id="scanPreviewWrap"></div>
       <div class="scan-status" id="scanStatus"></div>
     </div>
+
     <div class="panel" id="scanResultsPanel" style="margin-top:16px; display:none;">
       <h2>Eng o'xshash mahsulotlar</h2>
       <div id="scanResults"></div>
@@ -394,7 +430,7 @@
 <script>
 const fmt = n => new Intl.NumberFormat('uz-UZ').format(Math.round(n));
 
-// Brauzer xotirasi (localStorage) — GitHub Pages'da mustaqil ishlash uchun
+// Brauzer xotirasi (localStorage)
 const localStore = {
   async get(key){
     try{
@@ -413,7 +449,8 @@ const localStore = {
 let products = [];
 let sales = [];
 let expenses = [];
-let cart = []; // {productId, name, price, qty}
+let cart = []; 
+let cameraStream = null;
 
 function resizeImageFile(file, maxSize){
   return new Promise((resolve, reject)=>{
@@ -756,16 +793,6 @@ async function saveEditProduct(id){
   renderAll();
 }
 
-async function updateStock(id, newQtyStr){
-  const newQty = parseFloat(newQtyStr);
-  if(isNaN(newQty) || newQty < 0) return;
-  const product = products.find(p => p.id === id);
-  if(product){
-    product.qty = newQty;
-    await saveProducts();
-  }
-}
-
 function renderOmborTable(){
   const body = document.getElementById('omborTableBody');
   const emptyNote = document.getElementById('omborEmpty');
@@ -818,7 +845,7 @@ function renderOmborTable(){
       <td>${escapeHtml(p.name)}</td>
       <td>${escapeHtml(p.doc || '—')}</td>
       <td class="num">${fmt(p.price)}</td>
-      <td class="num"><input type="number" value="${p.qty}" style="width:70px; padding:4px 6px;" onchange="updateStock('${p.id}', this.value)"></td>
+      <td class="num">${p.qty}</td>
       <td>
         ${isPending
           ? `<button class="icon-btn del" onclick="confirmDeleteProduct('${p.id}')">Ha, o'chir</button>
@@ -832,7 +859,7 @@ function renderOmborTable(){
   });
 }
 
-// ---------- LOCAL AI (MobileNet, brauzerda ishlaydi, tashqi API/kalit shart emas) ----------
+// ---------- LOCAL AI (MobileNet) ----------
 let mobilenetModel = null;
 let mobilenetLoadPromise = null;
 
@@ -843,7 +870,7 @@ function loadMobilenetModel(){
     mobilenetModel = m;
     return m;
   }).catch(e=>{
-    mobilenetLoadPromise = null; // keyingi urinishda qayta yuklab ko'rish uchun
+    mobilenetLoadPromise = null;
     throw e;
   });
   return mobilenetLoadPromise;
@@ -858,7 +885,6 @@ function loadImageEl(dataUrl){
   });
 }
 
-// Rasmning "AI xususiyat vektori"ni chiqarish — hammasi brauzerning o'zida, hech narsa serverga yuborilmaydi
 async function extractEmbedding(dataUrl){
   const model = await loadMobilenetModel();
   const img = await loadImageEl(dataUrl);
@@ -878,7 +904,6 @@ function cosineSimilarity(a, b){
   return dot / (Math.sqrt(normA) * Math.sqrt(normB) + 1e-8);
 }
 
-// Har bir mahsulot rasmi uchun embedding keshi — rasm o'zgarmagan ekan, qayta hisoblanmaydi
 const productEmbeddingCache = {};
 
 async function getProductEmbedding(product){
@@ -891,11 +916,63 @@ async function getProductEmbedding(product){
   return embedding;
 }
 
-// ---------- SKANER ----------
+// ---------- LIVE KAMERA VA SKANER ----------
 const SCAN_CTX = {
   skaner: { preview: 'scanPreviewWrap', status: 'scanStatus', resultsPanel: 'scanResultsPanel', results: 'scanResults' },
   kassa:  { preview: 'kassaScanPreviewWrap', status: 'kassaScanStatus', resultsPanel: 'kassaScanResultsPanel', results: 'kassaScanResults' }
 };
+
+async function toggleCameraMode(mode){
+  const cameraWrap = document.getElementById('cameraWrap');
+  const snapBtn = document.getElementById('snapAndScanBtn');
+  const fileContainer = document.getElementById('fileScanContainer');
+
+  if(mode === 'live'){
+    fileContainer.style.display = 'none';
+    cameraWrap.style.display = 'block';
+    snapBtn.style.display = 'block';
+    startLiveCamera();
+  } else {
+    stopLiveCamera();
+    cameraWrap.style.display = 'none';
+    snapBtn.style.display = 'none';
+    fileContainer.style.display = 'block';
+  }
+}
+
+async function startLiveCamera(){
+  try{
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 640 } }
+    });
+    const video = document.getElementById('webcamVideo');
+    video.srcObject = cameraStream;
+  }catch(e){
+    showToast("Kamerani ochish imkoni bo'lmadi: " + e.message);
+  }
+}
+
+function stopLiveCamera(){
+  if(cameraStream){
+    cameraStream.getTracks().forEach(track => track.stop());
+    cameraStream = null;
+  }
+}
+
+async function snapAndScan(){
+  const video = document.getElementById('webcamVideo');
+  if(!video || !video.videoWidth) return;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+
+  document.getElementById('scanPreviewWrap').innerHTML = `<img src="${dataUrl}">`;
+  await performScan(dataUrl, 'skaner');
+}
 
 async function handleScanFile(input, context){
   const file = input.files && input.files[0];
@@ -924,18 +1001,13 @@ async function performScan(scannedImageData, context){
     return;
   }
 
-  statusEl.textContent = mobilenetModel ? 'Solishtirilmoqda...' : "AI modeli yuklanmoqda (birinchi marta biroz vaqt oladi)...";
+  statusEl.textContent = mobilenetModel ? 'Solishtirilmoqda...' : "AI modeli yuklanmoqda...";
 
   try{
     await loadMobilenetModel();
   }catch(e){
     console.error('Mobilenet load error:', e);
-    const isFileProtocol = location.protocol === 'file:';
-    if(isFileProtocol){
-      statusEl.textContent = "AI modelni yuklab bo'lmadi: fayl to'g'ridan-to'g'ri (file://) ochilgan. Sahifani veb-server orqali (GitHub Pages yoki lokal server) oching.";
-    } else {
-      statusEl.textContent = "AI modelni yuklab bo'lmadi: " + (e && e.message ? e.message : 'nomaʼlum xatolik') + ". Brauzer konsolini (F12) tekshiring.";
-    }
+    statusEl.textContent = "AI modelni yuklab bo'lmadi.";
     return;
   }
 
@@ -1210,6 +1282,9 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('view-' + btn.dataset.view).classList.add('active');
+    if(btn.dataset.view !== 'skaner'){
+      stopLiveCamera();
+    }
   });
 });
 
@@ -1217,13 +1292,6 @@ document.getElementById('sellBtn').addEventListener('click', finalizeSale);
 document.getElementById('addProductBtn').addEventListener('click', addProduct);
 document.getElementById('addExpenseBtn').addEventListener('click', addExpense);
 document.getElementById('exportBtn').addEventListener('click', exportBackup);
-
-if(location.protocol === 'file:'){
-  const scanStatusEl = document.getElementById('scanStatus');
-  if(scanStatusEl){
-    scanStatusEl.textContent = "Diqqat: bu fayl to'g'ridan-to'g'ri (file://) ochilgan — AI skaner ishlamasligi mumkin. Sahifani GitHub Pages yoki lokal server orqali oching.";
-  }
-}
 
 loadData();
 </script>
