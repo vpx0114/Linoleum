@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linoleum — Do'kon tizimi</title>
+<style>
+  :root{
+    --bg:#18160f;
+    --surface:#252017;
+    --surface-2:#2f291d;
+    --line:#443c2a;
+    --text:#f2ead9;
+    --muted:#a89878;
+    --accent:#d69a3b;
+    --accent-dim:#8a6220;
+    --danger:#c0604a;
+    --success:#7fa06a;
+    --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --shadow: 0 2px 10px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(214,154,59,0.07), transparent 40%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--sans); min-height:100vh;
+  }
+  .app{max-width:1040px; margin:0 auto; padding:22px 16px 70px;}
+
+  header{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;}
+  header .brand{display:flex; align-items:center; gap:10px;}
+  header .logo{
+    width:36px; height:36px; border-radius:9px; background:linear-gradient(145deg, var(--accent), var(--accent-dim));
+    display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;
+  }
+  header h1{font-size:19px; font-weight:700; letter-spacing:0.2px; margin:0; line-height:1.2;}
+  header .sub{font-size:11px; color:var(--muted); margin-top:1px;}
+  header .tag{font-family:var(--mono); font-size:10.5px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; background:var(--surface); border:1px solid var(--line); padding:5px 10px; border-radius:20px;}
+
+  nav{
+    display:flex; gap:4px; background:var(--surface); border:1px solid var(--line);
+    border-radius:12px; padding:4px; margin-bottom:20px; overflow-x:auto;
+  }
+  nav button{
+    flex:1; white-space:nowrap; background:none; border:none; color:var(--muted);
+    font-family:var(--sans); font-size:13.5px; font-weight:600; padding:10px 14px;
+    cursor:pointer; border-radius:8px; transition:background .15s, color .15s;
+  }
+  nav button.active{background:var(--accent); color:#1c1a17;}
+  nav button:hover:not(.active){color:var(--text); background:var(--surface-2);}
+
+  .view{display:none; animation:fadeIn .18s ease;}
+  .view.active{display:block;}
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(3px);} to{opacity:1; transform:translateY(0);} }
+
+  .grid{display:grid; grid-template-columns:1.3fr 1fr; gap:16px;}
+  @media (max-width:720px){ .grid{grid-template-columns:1fr;} }
+
+  .panel{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px; box-shadow:var(--shadow);}
+  .panel h2{font-size:12.5px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin:0 0 12px; display:flex; align-items:center; gap:6px;}
+  .panel-head-row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;}
+  .panel-head-row h2{margin:0;}
+
+  .product-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 8px; border-radius:8px; cursor:pointer; gap:10px; transition:background .12s;
+  }
+  .product-row:hover{background:var(--surface-2);}
+  .product-row:active{transform:scale(.995);}
+  .product-row .pleft{display:flex; align-items:center; gap:10px; min-width:0;}
+  .pthumb{
+    width:40px; height:40px; border-radius:8px; object-fit:cover;
+    background:var(--surface-2); border:1px solid var(--line); flex-shrink:0;
+  }
+  .pthumb-placeholder{
+    width:40px; height:40px; border-radius:8px; background:var(--surface-2);
+    border:1px solid var(--line); flex-shrink:0; display:flex; align-items:center;
+    justify-content:center; color:var(--muted); font-size:15px;
+  }
+  .product-row .pname{font-weight:600; font-size:14px;}
+  .product-row .pmeta{font-family:var(--mono); font-size:11px; color:var(--muted);}
+  .product-row .pprice{font-family:var(--mono); font-size:14px; color:var(--accent); text-align:right;}
+  .product-row .pstock{font-size:11px; color:var(--muted); text-align:right;}
+  .low{color:var(--danger) !important; font-weight:700;}
+
+  .receipt{
+    background:var(--surface);
+    border:1px dashed var(--line); border-radius:12px; padding:16px;
+    display:flex; flex-direction:column; min-height:340px; box-shadow:var(--shadow);
+  }
+  .receipt-items{flex:1; margin-bottom:12px; max-height:280px; overflow-y:auto;}
+  .receipt-item{
+    display:flex; justify-content:space-between; align-items:center; gap:6px;
+    font-family:var(--mono); font-size:12.5px; padding:7px 0; border-bottom:1px dotted var(--line);
+  }
+  .receipt-item .rname{color:var(--text); max-width:30%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .receipt-item .rqty{color:var(--muted); white-space:nowrap; display:flex; align-items:center; gap:3px;}
+  .receipt-item .rline{min-width:60px; text-align:right; color:var(--text);}
+  .receipt-item button{background:none; border:none; color:var(--danger); cursor:pointer; font-size:15px; padding:0 4px;}
+  .receipt-item input.price-edit{
+    width:62px; background:var(--bg); border:1px solid var(--line); color:var(--accent);
+    font-family:var(--mono); font-size:12px; border-radius:4px; padding:3px 4px; text-align:right;
+  }
+  .receipt-item input.price-edit:focus{outline:none; border-color:var(--accent);}
+  .receipt-item input.qty-edit{
+    width:46px; background:var(--bg); border:1px solid var(--line); color:var(--text);
+    font-family:var(--mono); font-size:12px; border-radius:4px; padding:3px 4px; text-align:center;
+  }
+  .receipt-item input.qty-edit:focus{outline:none; border-color:var(--accent);}
+  .receipt-empty{color:var(--muted); font-size:12.5px; text-align:center; padding:34px 0; font-family:var(--mono);}
+
+  .receipt-total{
+    display:flex; justify-content:space-between; align-items:baseline;
+    border-top:1px solid var(--line); padding-top:12px; margin-bottom:12px;
+  }
+  .receipt-total .label{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:1px;}
+  .receipt-total .value{font-family:var(--mono); font-size:27px; font-weight:700; color:var(--accent);}
+
+  button.primary{
+    background:var(--accent); color:#1c1a17; border:none; border-radius:9px;
+    padding:12px; font-weight:700; font-size:14px; cursor:pointer; width:100%;
+    transition:transform .1s, opacity .1s;
+  }
+  button.primary:hover:not(:disabled){transform:translateY(-1px);}
+  button.primary:disabled{background:var(--accent-dim); color:#6b5c42; cursor:not-allowed;}
+  button.secondary{
+    background:var(--surface-2); color:var(--text); border:1px solid var(--line); border-radius:9px;
+    padding:10px 14px; font-weight:600; font-size:13px; cursor:pointer; transition:border-color .12s;
+  }
+  button.secondary:hover{border-color:var(--accent);}
+
+  input, select{
+    background:var(--bg); border:1px solid var(--line); color:var(--text);
+    border-radius:7px; padding:9px 10px; font-family:var(--sans); font-size:13px; width:100%;
+  }
+  input:focus, select:focus{outline:none; border-color:var(--accent);}
+  label{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:4px;}
+  .field{margin-bottom:10px;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{text-align:left; color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:0.5px; padding:8px 6px; border-bottom:1px solid var(--line);}
+  td{padding:9px 6px; border-bottom:1px solid var(--line);}
+  td.num, th.num{text-align:right; font-family:var(--mono);}
+  tr.editing td{background:var(--surface-2);}
+  .icon-btn{background:none; border:none; color:var(--muted); cursor:pointer; font-size:12.5px; padding:3px 7px; border-radius:6px;}
+  .icon-btn:hover{color:var(--accent); background:var(--surface-2);}
+  .icon-btn.del:hover{color:var(--danger);}
+  .table-thumb{width:34px; height:34px; border-radius:7px; object-fit:cover; background:var(--surface-2); border:1px solid var(--line);}
+  .table-thumb-placeholder{
+    width:34px; height:34px; border-radius:7px; background:var(--surface-2); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:13px;
+  }
+  .edit-cell input[type="text"], .edit-cell input[type="number"]{padding:6px 8px; font-size:12.5px;}
+  .edit-cell input[type="file"]{padding:4px; font-size:11px;}
+  .edit-actions{display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;}
+  .img-upload-row{display:flex; align-items:center; gap:10px; margin-bottom:10px;}
+  .img-preview{
+    width:56px; height:56px; border-radius:9px; object-fit:cover;
+    background:var(--surface-2); border:1px solid var(--line); flex-shrink:0;
+  }
+  .img-preview-placeholder{
+    width:56px; height:56px; border-radius:9px; background:var(--surface-2); border:1px dashed var(--line);
+    display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:11px; flex-shrink:0; text-align:center;
+  }
+
+  .stat-cards{display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:18px;}
+  .stat-card{background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:11px; padding:14px 16px; box-shadow:var(--shadow);}
+  .stat-card.exp{border-left-color:var(--danger);}
+  .stat-card.profit{border-left-color:var(--success);}
+  .stat-card .slabel{font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:1px;}
+  .stat-card .sval{font-family:var(--mono); font-size:22px; font-weight:700; color:var(--accent); margin-top:6px;}
+  .stat-card.exp .sval{color:var(--danger);}
+  .stat-card.profit .sval{color:var(--success);}
+
+  .expense-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:9px 6px; border-bottom:1px solid var(--line); font-size:13px;
+  }
+  .expense-row:last-child{border-bottom:none;}
+  .expense-date{font-family:var(--mono); font-size:11px; color:var(--muted); width:76px; flex-shrink:0;}
+  .expense-note{flex:1; color:var(--text); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .expense-amount{font-family:var(--mono); color:var(--danger); font-weight:600; white-space:nowrap;}
+
+  .sale-row{padding:10px 6px; border-bottom:1px solid var(--line);}
+  .sale-row:last-child{border-bottom:none;}
+  .sale-row-top{display:flex; justify-content:space-between; align-items:baseline; gap:10px;}
+  .sale-date{font-family:var(--mono); font-size:11px; color:var(--muted);}
+  .sale-total{font-family:var(--mono); font-weight:700; color:var(--accent); font-size:14px;}
+  .sale-items{font-size:11.5px; color:var(--muted); margin-top:3px; line-height:1.5;}
+
+  .bar-row{display:flex; align-items:center; gap:10px; margin-bottom:8px;}
+  .bar-name{width:120px; font-size:12px; color:var(--text); flex-shrink:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .bar-track{flex:1; background:var(--surface-2); border-radius:4px; height:16px; overflow:hidden;}
+  .bar-fill{background:var(--accent); height:100%;}
+  .bar-val{font-family:var(--mono); font-size:11px; color:var(--muted); width:70px; text-align:right;}
+
+  .empty-note{color:var(--muted); font-size:13px; text-align:center; padding:22px;}
+
+  .scan-note{color:var(--muted); font-size:12.5px; line-height:1.6; margin:0 0 14px;}
+  .scan-upload-btn{
+    display:inline-block; background:var(--accent); color:#1c1a17; border-radius:9px;
+    padding:12px 20px; font-weight:700; font-size:14px; cursor:pointer; transition:transform .1s;
+  }
+  .scan-upload-btn:hover{transform:translateY(-1px);}
+  .scan-upload-btn.small{padding:8px 14px; font-size:12.5px;}
+  .scan-preview img{width:130px; height:130px; object-fit:cover; border-radius:9px; border:1px solid var(--line); margin-top:12px;}
+  .scan-status{margin-top:10px; font-size:12.5px; color:var(--muted); font-family:var(--mono);}
+  .scan-result-row{
+    display:flex; align-items:center; gap:12px; padding:10px 6px; border-bottom:1px solid var(--line);
+  }
+  .scan-result-row:last-child{border-bottom:none;}
+  .scan-result-thumb{width:50px; height:50px; border-radius:9px; object-fit:cover; border:1px solid var(--line); flex-shrink:0;}
+  .scan-result-info{flex:1; min-width:0;}
+  .scan-result-name{font-weight:600; font-size:13.5px;}
+  .scan-result-reason{font-size:11.5px; color:var(--muted); margin-top:2px;}
+  .scan-score-track{background:var(--surface-2); border-radius:4px; height:6px; margin-top:6px; overflow:hidden;}
+  .scan-score-fill{background:var(--accent); height:100%;}
+  .scan-score-pct{font-family:var(--mono); font-size:12.5px; color:var(--accent); width:38px; text-align:right; flex-shrink:0;}
+  .scan-select-btn{
+    background:var(--surface-2); border:1px solid var(--line); color:var(--accent);
+    border-radius:7px; padding:6px 10px; font-size:11.5px; font-weight:600; cursor:pointer; white-space:nowrap; flex-shrink:0;
+  }
+  .scan-select-btn:hover{border-color:var(--accent);}
+
+  .settings-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;}
+
+  .toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    background:var(--surface-2); border:1px solid var(--accent); color:var(--text);
+    padding:10px 18px; border-radius:9px; font-size:13px; opacity:0; transition:opacity .2s;
+    pointer-events:none; box-shadow:var(--shadow); z-index:100;
+  }
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="logo">🧱</div>
+      <div>
+        <h1>Linoleum — Do'kon tizimi</h1>
+        <div class="sub">Kassa · Ombor · Skaner · Hisobot</div>
+      </div>
+    </div>
+    <span class="tag" id="statusTag">yuklanmoqda...</span>
+  </header>
+
+  <nav>
+    <button class="tab-btn active" data-view="kassa">💵 Kassa</button>
+    <button class="tab-btn" data-view="ombor">📦 Ombor</button>
+    <button class="tab-btn" data-view="skaner">📷 Skaner</button>
+    <button class="tab-btn" data-view="hisobot">📊 Hisobot</button>
+  </nav>
+
+  <!-- KASSA -->
+  <div class="view active" id="view-kassa">
+    <div class="grid">
+      <div class="panel">
+        <h2>Mahsulotlar</h2>
+        <div id="kassaProductList"></div>
+      </div>
+      <div class="receipt">
+        <h2 style="margin-bottom:10px;">🧾 Chek</h2>
+        <div class="receipt-items" id="receiptItems">
+          <div class="receipt-empty">Savat bo'sh</div>
+        </div>
+        <div class="receipt-total">
+          <span class="label">Jami</span>
+          <span class="value" id="receiptTotal">0</span>
+        </div>
+        <button class="primary" id="sellBtn" disabled>Sotish</button>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:16px;">
+      <div class="panel-head-row">
+        <h2>Tez skanerlash</h2>
+        <label class="scan-upload-btn small" for="kassaScanInput">📷 Skanerlash</label>
+      </div>
+      <input type="file" id="kassaScanInput" accept="image/*" capture="environment" onchange="handleScanFile(this,'kassa')" style="display:none;">
+      <div class="scan-preview" id="kassaScanPreviewWrap"></div>
+      <div class="scan-status" id="kassaScanStatus"></div>
+      <div id="kassaScanResultsPanel" style="display:none; margin-top:8px;">
+        <div id="kassaScanResults"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OMBOR -->
+  <div class="view" id="view-ombor">
+    <div class="panel">
+      <h2>Yangi mahsulot qo'shish</h2>
+      <div class="img-upload-row">
+        <div id="newImagePreviewWrap"><div class="img-preview-placeholder">Rasm yo'q</div></div>
+        <div style="flex:1;">
+          <label>Mahsulot rasmi</label>
+          <input type="file" id="newImageInput" accept="image/*" onchange="handleNewImageFile(this)">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Nomi</label><input id="newName" placeholder="masalan: Tarkett Premium 3m"></div>
+        <div class="field"><label>Hujjat raqami</label><input id="newDoc" placeholder="ishlab chiqaruvchi kodi"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Narxi (so'm / m)</label><input id="newPrice" type="number" placeholder="0"></div>
+        <div class="field"><label>Boshlang'ich qoldiq (m)</label><input id="newQty" type="number" placeholder="0"></div>
+      </div>
+      <button class="secondary" id="addProductBtn" style="width:100%;">+ Qo'shish</button>
+    </div>
+    <div class="panel" style="margin-top:16px;">
+      <h2>Ombordagi mahsulotlar</h2>
+      <table>
+        <thead>
+          <tr><th></th><th>Nomi</th><th>Hujjat №</th><th class="num">Narx (so'm/m)</th><th class="num">Qoldiq (m)</th><th></th></tr>
+        </thead>
+        <tbody id="omborTableBody"></tbody>
+      </table>
+      <div id="omborEmpty" class="empty-note" style="display:none;">Hali mahsulot qo'shilmagan</div>
+    </div>
+  </div>
+
+  <!-- SKANER -->
+  <div class="view" id="view-skaner">
+    <div class="panel">
+      <h2>Sozlama — Claude API kalit</h2>
+      <p class="scan-note">Skaner Claude AI'ga so'rov yuborib rasmlarni solishtiradi, shuning uchun shaxsiy API kalit kerak. Kalit faqat shu brauzeringizda saqlanadi — GitHub kodiga yozilmaydi, hech kimga ko'rinmaydi. Kalitni <strong>console.anthropic.com</strong> saytida "API Keys" bo'limidan olasiz. Har bir skanerlash ozgina pul sarflaydi (odatda 1 sentdan kam).</p>
+      <div class="field">
+        <label>API kalit (sk-ant- bilan boshlanadi)</label>
+        <input type="password" id="apiKeyInput" placeholder="sk-ant-...">
+      </div>
+      <button class="secondary" id="saveApiKeyBtn">Kalitni saqlash</button>
+      <div id="apiKeyStatus" class="scan-note" style="margin-top:8px;"></div>
+    </div>
+
+    <div class="panel" style="margin-top:16px;">
+      <h2>Linoleumni skanerlash</h2>
+      <p class="scan-note">Kamerani namunaga qarating va suratga oling — ombordagi <strong>rasmi biriktirilgan</strong> mahsulotlar bilan solishtirilib, eng o'xshash 5 tasi ko'rsatiladi. Aniqlik taxminiy — kod/QR usuliga qaraganda kamroq ishonchli.</p>
+      <label class="scan-upload-btn" for="scanInput">📷 Suratga olish / rasm tanlash</label>
+      <input type="file" id="scanInput" accept="image/*" capture="environment" onchange="handleScanFile(this,'skaner')" style="display:none;">
+      <div class="scan-preview" id="scanPreviewWrap"></div>
+      <div class="scan-status" id="scanStatus"></div>
+    </div>
+    <div class="panel" id="scanResultsPanel" style="margin-top:16px; display:none;">
+      <h2>Eng o'xshash mahsulotlar</h2>
+      <div id="scanResults"></div>
+    </div>
+
+    <div class="panel" style="margin-top:16px;">
+      <h2>Zaxira nusxa</h2>
+      <p class="scan-note">Ma'lumot shu brauzerda saqlanadi. Boshqa qurilmaga o'tsangiz yoki brauzer keshini tozalasangiz yo'qolib ketmasligi uchun vaqti-vaqti bilan zaxira nusxa olib turing.</p>
+      <div class="settings-row">
+        <button class="secondary" id="exportBtn">⬇️ Zaxira nusxa yuklab olish</button>
+        <label class="secondary" for="restoreInput" style="cursor:pointer;">⬆️ Fayldan tiklash</label>
+        <input type="file" id="restoreInput" accept="application/json" onchange="handleRestoreFile(this)" style="display:none;">
+      </div>
+      <div id="restoreStatus" class="scan-note" style="margin-top:10px;"></div>
+    </div>
+  </div>
+
+  <!-- HISOBOT -->
+  <div class="view" id="view-hisobot">
+    <div class="stat-cards">
+      <div class="stat-card"><div class="slabel">Bugungi savdo</div><div class="sval" id="statToday">0</div></div>
+      <div class="stat-card"><div class="slabel">Shu oy savdo</div><div class="sval" id="statMonth">0</div></div>
+      <div class="stat-card"><div class="slabel">Ombor qiymati</div><div class="sval" id="statStockValue">0</div></div>
+      <div class="stat-card exp"><div class="slabel">Bugungi chiqim</div><div class="sval" id="statExpenseToday">0</div></div>
+      <div class="stat-card exp"><div class="slabel">Oylik chiqim</div><div class="sval" id="statExpenseMonth">0</div></div>
+      <div class="stat-card profit"><div class="slabel">Sof foyda (bugun)</div><div class="sval" id="statProfitToday">0</div></div>
+    </div>
+
+    <div class="panel">
+      <h2>Eng ko'p sotilgan mahsulotlar (shu oy)</h2>
+      <div id="topProducts"></div>
+      <div id="topEmpty" class="empty-note" style="display:none;">Bu oyda sotuv bo'lmagan</div>
+    </div>
+
+    <div class="panel" style="margin-top:16px;">
+      <h2>So'nggi sotuvlar</h2>
+      <div id="salesHistoryList"></div>
+      <div id="salesHistoryEmpty" class="empty-note" style="display:none;">Hali sotuv bo'lmagan</div>
+    </div>
+
+    <div class="panel" style="margin-top:16px;">
+      <h2>Chiqim qo'shish</h2>
+      <div class="row2">
+        <div class="field"><label>Summasi (so'm)</label><input id="newExpenseAmount" type="number" placeholder="0"></div>
+        <div class="field"><label>Izoh</label><input id="newExpenseNote" placeholder="masalan: yetkazib berish, ijara"></div>
+      </div>
+      <button class="secondary" id="addExpenseBtn" style="width:100%;">+ Chiqim qo'shish</button>
+      <div id="expenseList" style="margin-top:14px;"></div>
+      <div id="expenseEmpty" class="empty-note" style="display:none;">Hali chiqim yozilmagan</div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const fmt = n => new Intl.NumberFormat('uz-UZ').format(Math.round(n));
+
+// Brauzer xotirasi (localStorage) — GitHub Pages'da mustaqil ishlash uchun
+const localStore = {
+  async get(key){
+    try{
+      const val = localStorage.getItem(key);
+      return val !== null ? { key, value: val } : null;
+    }catch(e){ return null; }
+  },
+  async set(key, value){
+    try{
+      localStorage.setItem(key, value);
+      return { key, value };
+    }catch(e){ return null; }
+  }
+};
+
+let products = [];
+let sales = [];
+let expenses = [];
+let cart = []; // {productId, name, price, qty}
+
+function resizeImageFile(file, maxSize){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Faylni o'qib bo'lmadi"));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("Rasmni ochib bo'lmadi"));
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if(w > h && w > maxSize){ h = Math.round(h * maxSize / w); w = maxSize; }
+        else if(h > maxSize){ w = Math.round(w * maxSize / h); h = maxSize; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.72));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+function setStatus(text){
+  document.getElementById('statusTag').textContent = text;
+}
+
+function formatDateTime(iso){
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2,'0');
+  return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+async function loadData(){
+  setStatus('yuklanmoqda...');
+  try{
+    const p = await localStore.get('mahsulotlar');
+    products = p ? JSON.parse(p.value) : [];
+  }catch(e){ products = []; }
+  try{
+    const s = await localStore.get('sotuvlar');
+    sales = s ? JSON.parse(s.value) : [];
+  }catch(e){ sales = []; }
+  try{
+    const ex = await localStore.get('chiqimlar');
+    expenses = ex ? JSON.parse(ex.value) : [];
+  }catch(e){ expenses = []; }
+  setStatus('saqlangan');
+  renderAll();
+}
+
+async function saveProducts(){
+  try{
+    const r = await localStore.set('mahsulotlar', JSON.stringify(products));
+    if(!r) showToast('Saqlashda xatolik');
+  }catch(e){ showToast('Saqlashda xatolik: ' + e.message); }
+}
+
+async function saveSales(){
+  try{
+    const r = await localStore.set('sotuvlar', JSON.stringify(sales));
+    if(!r) showToast('Saqlashda xatolik');
+  }catch(e){ showToast('Saqlashda xatolik: ' + e.message); }
+}
+
+async function saveExpenses(){
+  try{
+    const r = await localStore.set('chiqimlar', JSON.stringify(expenses));
+    if(!r) showToast('Saqlashda xatolik');
+  }catch(e){ showToast('Saqlashda xatolik: ' + e.message); }
+}
+
+function renderAll(){
+  renderKassaList();
+  renderReceipt();
+  renderOmborTable();
+  renderHisobot();
+}
+
+// ---------- KASSA ----------
+function renderKassaList(){
+  const el = document.getElementById('kassaProductList');
+  el.innerHTML = '';
+  if(products.length === 0){
+    el.innerHTML = '<div class="empty-note">Avval "Ombor" bo\'limida mahsulot qo\'shing</div>';
+    return;
+  }
+  products.forEach(p=>{
+    const row = document.createElement('div');
+    row.className = 'product-row';
+    const low = p.qty <= 5;
+    const thumb = p.image
+      ? `<img class="pthumb" src="${p.image}">`
+      : `<div class="pthumb-placeholder">—</div>`;
+    row.innerHTML = `
+      <div class="pleft">
+        ${thumb}
+        <div>
+          <div class="pname">${escapeHtml(p.name)}</div>
+          <div class="pmeta">${escapeHtml(p.doc || '—')}</div>
+        </div>
+      </div>
+      <div>
+        <div class="pprice">${fmt(p.price)}</div>
+        <div class="pstock ${low ? 'low' : ''}">${p.qty} m qoldi</div>
+      </div>
+    `;
+    row.onclick = () => addToCart(p);
+    el.appendChild(row);
+  });
+}
+
+function addToCart(product){
+  if(product.qty <= 0){ showToast(`${product.name} — qoldiq yo'q`); return; }
+  const existing = cart.find(c => c.productId === product.id);
+  if(existing){
+    if(existing.qty + 1 > product.qty){ showToast('Omborda yetarli emas'); return; }
+    existing.qty += 1;
+  } else {
+    cart.push({productId: product.id, name: product.name, price: product.price, qty: 1});
+  }
+  renderReceipt();
+}
+
+function changeCartPrice(productId, newPriceStr){
+  const price = parseFloat(newPriceStr);
+  const item = cart.find(c => c.productId === productId);
+  if(!item || isNaN(price) || price < 0){ renderReceipt(); return; }
+  item.price = price;
+  renderReceipt();
+}
+
+function changeCartQty(productId, delta){
+  const item = cart.find(c => c.productId === productId);
+  const product = products.find(p => p.id === productId);
+  if(!item) return;
+  const newQty = Math.round((item.qty + delta) * 100) / 100;
+  if(newQty <= 0){
+    cart = cart.filter(c => c.productId !== productId);
+  } else if(product && newQty > product.qty){
+    showToast('Omborda yetarli emas');
+    return;
+  } else {
+    item.qty = newQty;
+  }
+  renderReceipt();
+}
+
+function setCartQty(productId, newQtyStr){
+  const newQty = parseFloat(newQtyStr);
+  const item = cart.find(c => c.productId === productId);
+  const product = products.find(p => p.id === productId);
+  if(!item) return;
+  if(isNaN(newQty) || newQty <= 0){
+    cart = cart.filter(c => c.productId !== productId);
+    renderReceipt();
+    return;
+  }
+  if(product && newQty > product.qty){
+    showToast('Omborda yetarli emas: ' + product.qty + ' m bor');
+    item.qty = product.qty;
+    renderReceipt();
+    return;
+  }
+  item.qty = newQty;
+  renderReceipt();
+}
+
+function renderReceipt(){
+  const el = document.getElementById('receiptItems');
+  const totalEl = document.getElementById('receiptTotal');
+  const sellBtn = document.getElementById('sellBtn');
+  el.innerHTML = '';
+  if(cart.length === 0){
+    el.innerHTML = '<div class="receipt-empty">Savat bo\'sh</div>';
+    totalEl.textContent = '0';
+    sellBtn.disabled = true;
+    return;
+  }
+  let total = 0;
+  cart.forEach(item=>{
+    total += item.price * item.qty;
+    const row = document.createElement('div');
+    row.className = 'receipt-item';
+    row.innerHTML = `
+      <span class="rname">${escapeHtml(item.name)}</span>
+      <span class="rqty">
+        <button onclick="changeCartQty('${item.productId}', -1)">−</button>
+        <input type="number" class="qty-edit" step="0.01" value="${item.qty}" onchange="setCartQty('${item.productId}', this.value)">
+        <button onclick="changeCartQty('${item.productId}', 1)">+</button>
+      </span>
+      <input type="number" class="price-edit" value="${item.price}" onchange="changeCartPrice('${item.productId}', this.value)">
+      <span class="rline">${fmt(item.price * item.qty)}</span>
+    `;
+    el.appendChild(row);
+  });
+  totalEl.textContent = fmt(total);
+  sellBtn.disabled = false;
+}
+
+async function finalizeSale(){
+  if(cart.length === 0) return;
+  const sellBtn = document.getElementById('sellBtn');
+  sellBtn.disabled = true;
+  sellBtn.textContent = 'Saqlanmoqda...';
+
+  const total = cart.reduce((s,i)=> s + i.price*i.qty, 0);
+  const sale = {
+    id: 'sale_' + Date.now(),
+    timestamp: new Date().toISOString(),
+    items: cart.map(c => ({productId: c.productId, name: c.name, qty: c.qty, price: c.price})),
+    total
+  };
+  sales.push(sale);
+  cart.forEach(item=>{
+    const product = products.find(p => p.id === item.productId);
+    if(product) product.qty = Math.max(0, product.qty - item.qty);
+  });
+
+  await Promise.all([saveSales(), saveProducts()]);
+  cart = [];
+  sellBtn.textContent = 'Sotish';
+  showToast('Sotuv saqlandi: ' + fmt(total) + " so'm");
+  renderAll();
+}
+
+// ---------- OMBOR ----------
+let newImageData = null;
+let editingId = null;
+let editImageData = undefined;
+
+async function handleNewImageFile(input){
+  const file = input.files && input.files[0];
+  if(!file) return;
+  try{
+    newImageData = await resizeImageFile(file, 300);
+    document.getElementById('newImagePreviewWrap').innerHTML = `<img class="img-preview" src="${newImageData}">`;
+  }catch(e){
+    showToast('Rasmni yuklashda xatolik');
+  }
+}
+
+async function addProduct(){
+  const name = document.getElementById('newName').value.trim();
+  const doc = document.getElementById('newDoc').value.trim();
+  const price = parseFloat(document.getElementById('newPrice').value);
+  const qty = parseFloat(document.getElementById('newQty').value);
+
+  if(!name){ showToast('Nomini kiriting'); return; }
+  if(isNaN(price) || price < 0){ showToast("Narxni to'g'ri kiriting"); return; }
+  if(isNaN(qty) || qty < 0){ showToast("Qoldiqni to'g'ri kiriting"); return; }
+
+  products.push({id: 'prod_' + Date.now(), name, doc, price, qty, image: newImageData || null});
+  await saveProducts();
+  document.getElementById('newName').value = '';
+  document.getElementById('newDoc').value = '';
+  document.getElementById('newPrice').value = '';
+  document.getElementById('newQty').value = '';
+  document.getElementById('newImageInput').value = '';
+  newImageData = null;
+  document.getElementById('newImagePreviewWrap').innerHTML = '<div class="img-preview-placeholder">Rasm yo\'q</div>';
+  showToast("Mahsulot qo'shildi");
+  renderAll();
+}
+
+let pendingDeleteId = null;
+
+function requestDeleteProduct(id){
+  pendingDeleteId = id;
+  renderOmborTable();
+}
+
+function cancelDeleteProduct(){
+  pendingDeleteId = null;
+  renderOmborTable();
+}
+
+async function confirmDeleteProduct(id){
+  products = products.filter(p => p.id !== id);
+  pendingDeleteId = null;
+  await saveProducts();
+  showToast("Mahsulot o'chirildi");
+  renderAll();
+}
+
+function startEditProduct(id){
+  editingId = id;
+  editImageData = undefined;
+  pendingDeleteId = null;
+  renderOmborTable();
+}
+
+function cancelEditProduct(){
+  editingId = null;
+  editImageData = undefined;
+  renderOmborTable();
+}
+
+async function handleEditImageFile(input){
+  const file = input.files && input.files[0];
+  if(!file) return;
+  try{
+    editImageData = await resizeImageFile(file, 300);
+    const wrap = document.getElementById('editImagePreviewWrap');
+    if(wrap) wrap.innerHTML = `<img class="img-preview" src="${editImageData}">`;
+  }catch(e){
+    showToast('Rasmni yuklashda xatolik');
+  }
+}
+
+async function saveEditProduct(id){
+  const name = document.getElementById('edit-name').value.trim();
+  const doc = document.getElementById('edit-doc').value.trim();
+  const price = parseFloat(document.getElementById('edit-price').value);
+  const qty = parseFloat(document.getElementById('edit-qty').value);
+
+  if(!name){ showToast('Nomini kiriting'); return; }
+  if(isNaN(price) || price < 0){ showToast("Narxni to'g'ri kiriting"); return; }
+  if(isNaN(qty) || qty < 0){ showToast("Qoldiqni to'g'ri kiriting"); return; }
+
+  const product = products.find(p => p.id === id);
+  if(!product) return;
+  product.name = name;
+  product.doc = doc;
+  product.price = price;
+  product.qty = qty;
+  if(editImageData !== undefined) product.image = editImageData;
+
+  editingId = null;
+  editImageData = undefined;
+  await saveProducts();
+  showToast('Mahsulot yangilandi');
+  renderAll();
+}
+
+async function updateStock(id, newQtyStr){
+  const newQty = parseFloat(newQtyStr);
+  if(isNaN(newQty) || newQty < 0) return;
+  const product = products.find(p => p.id === id);
+  if(product){
+    product.qty = newQty;
+    await saveProducts();
+  }
+}
+
+function renderOmborTable(){
+  const body = document.getElementById('omborTableBody');
+  const emptyNote = document.getElementById('omborEmpty');
+  body.innerHTML = '';
+  emptyNote.style.display = products.length === 0 ? 'block' : 'none';
+  products.forEach(p=>{
+    const tr = document.createElement('tr');
+    const isPending = pendingDeleteId === p.id;
+    const isEditing = editingId === p.id;
+
+    if(isEditing){
+      const currentImg = editImageData !== undefined ? editImageData : p.image;
+      const previewHtml = currentImg
+        ? `<img class="img-preview" src="${currentImg}">`
+        : `<div class="img-preview-placeholder">Rasm yo'q</div>`;
+      tr.className = 'editing';
+      tr.innerHTML = `
+        <td class="edit-cell" colspan="6">
+          <div class="img-upload-row">
+            <div id="editImagePreviewWrap">${previewHtml}</div>
+            <div style="flex:1;">
+              <label>Mahsulot rasmi</label>
+              <input type="file" accept="image/*" onchange="handleEditImageFile(this)">
+            </div>
+          </div>
+          <div class="row2">
+            <div class="field"><label>Nomi</label><input type="text" id="edit-name" value="${escapeHtml(p.name)}"></div>
+            <div class="field"><label>Hujjat raqami</label><input type="text" id="edit-doc" value="${escapeHtml(p.doc || '')}"></div>
+          </div>
+          <div class="row2">
+            <div class="field"><label>Narxi (so'm/m)</label><input type="number" id="edit-price" value="${p.price}"></div>
+            <div class="field"><label>Qoldiq (m)</label><input type="number" id="edit-qty" value="${p.qty}"></div>
+          </div>
+          <div class="edit-actions">
+            <button class="secondary" onclick="saveEditProduct('${p.id}')">Saqlash</button>
+            <button class="secondary" onclick="cancelEditProduct()">Bekor qilish</button>
+          </div>
+        </td>
+      `;
+      body.appendChild(tr);
+      return;
+    }
+
+    const thumb = p.image
+      ? `<img class="table-thumb" src="${p.image}">`
+      : `<div class="table-thumb-placeholder">—</div>`;
+
+    tr.innerHTML = `
+      <td>${thumb}</td>
+      <td>${escapeHtml(p.name)}</td>
+      <td>${escapeHtml(p.doc || '—')}</td>
+      <td class="num">${fmt(p.price)}</td>
+      <td class="num"><input type="number" value="${p.qty}" style="width:70px; padding:4px 6px;" onchange="updateStock('${p.id}', this.value)"></td>
+      <td>
+        ${isPending
+          ? `<button class="icon-btn del" onclick="confirmDeleteProduct('${p.id}')">Ha, o'chir</button>
+             <button class="icon-btn" onclick="cancelDeleteProduct()">Bekor</button>`
+          : `<button class="icon-btn" onclick="startEditProduct('${p.id}')">Tahrirlash</button>
+             <button class="icon-btn del" onclick="requestDeleteProduct('${p.id}')">O'chirish</button>`
+        }
+      </td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+// ---------- API KALIT ----------
+function getApiKey(){
+  return localStorage.getItem('anthropicApiKey') || '';
+}
+
+function saveApiKey(){
+  const key = document.getElementById('apiKeyInput').value.trim();
+  const statusEl = document.getElementById('apiKeyStatus');
+  if(!key.startsWith('sk-ant-')){
+    statusEl.textContent = "Kalit noto'g'ri ko'rinadi (sk-ant- bilan boshlanishi kerak)";
+    return;
+  }
+  localStorage.setItem('anthropicApiKey', key);
+  document.getElementById('apiKeyInput').value = '';
+  statusEl.textContent = 'Kalit saqlandi ✓';
+}
+
+// ---------- SKANER ----------
+const SCAN_CTX = {
+  skaner: { preview: 'scanPreviewWrap', status: 'scanStatus', resultsPanel: 'scanResultsPanel', results: 'scanResults' },
+  kassa:  { preview: 'kassaScanPreviewWrap', status: 'kassaScanStatus', resultsPanel: 'kassaScanResultsPanel', results: 'kassaScanResults' }
+};
+
+function base64Only(dataUrl){
+  return dataUrl.split(',')[1];
+}
+
+async function handleScanFile(input, context){
+  const file = input.files && input.files[0];
+  if(!file) return;
+  const c = SCAN_CTX[context];
+  document.getElementById(c.resultsPanel).style.display = 'none';
+  document.getElementById(c.status).textContent = '';
+  let imageData;
+  try{
+    imageData = await resizeImageFile(file, 500);
+  }catch(e){
+    document.getElementById(c.status).textContent = "Rasmni o'qib bo'lmadi";
+    return;
+  }
+  document.getElementById(c.preview).innerHTML = `<img src="${imageData}">`;
+  await performScan(imageData, context);
+}
+
+async function performScan(scannedImageData, context){
+  const c = SCAN_CTX[context];
+  const statusEl = document.getElementById(c.status);
+  const apiKey = getApiKey();
+
+  if(!apiKey){
+    statusEl.textContent = "Avval Skaner bo'limida API kalitni kiritib saqlang.";
+    return;
+  }
+
+  const withImages = products.filter(p => p.image);
+  if(withImages.length === 0){
+    statusEl.textContent = "Hech qaysi mahsulotda rasm yo'q — avval Ombor bo'limida mahsulotlarga rasm qo'shing.";
+    return;
+  }
+
+  statusEl.textContent = `Solishtirilmoqda... (${withImages.length} ta mahsulot bilan)`;
+
+  const content = [
+    { type: 'text', text: "Quyida do'kondagi mahsulotlar ro'yxati va har birining rasmi keladi (ID va nomi bilan)." }
+  ];
+  withImages.forEach(p=>{
+    content.push({ type: 'text', text: `ID: ${p.id} | Nomi: ${p.name}` });
+    content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64Only(p.image) } });
+  });
+  content.push({ type: 'text', text: 'Endi mijoz kamerada suratga olgan linoleum namunasi:' });
+  content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64Only(scannedImageData) } });
+  content.push({ type: 'text', text: 'Yuqoridagi ro\'yxatdagi mahsulotlardan ushbu namunaga naqsh, rang va tekstura bo\'yicha eng o\'xshash 5 tasini top. FAQAT quyidagi JSON massivini qaytar, boshqa hech qanday matn, izoh yoki ```json belgisi qo\'shma: [{"id":"mahsulot_id","score":0-100 son,"reason":"o\'zbek tilida bir qisqa jumla"}] — score kamayish tartibida.' });
+
+  try{
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content }]
+      })
+    });
+    const data = await response.json();
+    if(data.error){
+      statusEl.textContent = 'API xatolik: ' + data.error.message;
+      return;
+    }
+    const textBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
+    const clean = textBlocks.replace(/```json|```/g, '').trim();
+    let matches;
+    try{
+      matches = JSON.parse(clean);
+    }catch(parseErr){
+      statusEl.textContent = "Natijani o'qib bo'lmadi, qayta urinib ko'ring.";
+      return;
+    }
+    renderScanResults(matches, context);
+    statusEl.textContent = '';
+  }catch(e){
+    statusEl.textContent = 'Xatolik: ' + e.message;
+  }
+}
+
+function renderScanResults(matches, context){
+  const c = SCAN_CTX[context];
+  const panel = document.getElementById(c.resultsPanel);
+  const el = document.getElementById(c.results);
+  el.innerHTML = '';
+
+  const valid = (matches || []).filter(m => products.find(p => p.id === m.id)).slice(0, 5);
+  if(valid.length === 0){
+    panel.style.display = 'block';
+    el.innerHTML = '<div class="empty-note">Mos mahsulot topilmadi</div>';
+    return;
+  }
+
+  valid.forEach(m=>{
+    const product = products.find(p => p.id === m.id);
+    const score = Math.max(0, Math.min(100, Math.round(m.score || 0)));
+    const row = document.createElement('div');
+    row.className = 'scan-result-row';
+    row.innerHTML = `
+      <img class="scan-result-thumb" src="${product.image}">
+      <div class="scan-result-info">
+        <div class="scan-result-name">${escapeHtml(product.name)}</div>
+        <div class="scan-result-reason">${escapeHtml(m.reason || '')}</div>
+        <div class="scan-score-track"><div class="scan-score-fill" style="width:${score}%"></div></div>
+      </div>
+      <div class="scan-score-pct">${score}%</div>
+      <button class="scan-select-btn" onclick="selectScanResult('${product.id}','${context}')">+ Savatga</button>
+    `;
+    el.appendChild(row);
+  });
+  panel.style.display = 'block';
+}
+
+function selectScanResult(productId, context){
+  const product = products.find(p => p.id === productId);
+  if(!product) return;
+  addToCart(product);
+  showToast(`${product.name} savatga qo'shildi`);
+  if(context === 'skaner'){
+    document.querySelector('.tab-btn[data-view="kassa"]').click();
+  }
+}
+
+// ---------- ZAXIRA NUSXA ----------
+function exportBackup(){
+  const data = { products, sales, expenses, exportedAt: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'linoleum-zaxira-' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast('Zaxira nusxa yuklab olindi');
+}
+
+let pendingRestoreData = null;
+
+function handleRestoreFile(input){
+  const file = input.files && input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const statusEl = document.getElementById('restoreStatus');
+    try{
+      const data = JSON.parse(reader.result);
+      pendingRestoreData = data;
+      statusEl.innerHTML = `Faylda: ${(data.products||[]).length} mahsulot, ${(data.sales||[]).length} sotuv, ${(data.expenses||[]).length} chiqim topildi. Joriy ma'lumotlar shular bilan almashtiriladi.
+        <div class="settings-row">
+          <button class="secondary" onclick="applyRestore()">Ha, tiklash</button>
+          <button class="secondary" onclick="cancelRestore()">Bekor qilish</button>
+        </div>`;
+    }catch(e){
+      statusEl.textContent = "Fayl noto'g'ri formatda";
+    }
+  };
+  reader.readAsText(file);
+}
+
+async function applyRestore(){
+  if(!pendingRestoreData) return;
+  products = pendingRestoreData.products || [];
+  sales = pendingRestoreData.sales || [];
+  expenses = pendingRestoreData.expenses || [];
+  await Promise.all([saveProducts(), saveSales(), saveExpenses()]);
+  pendingRestoreData = null;
+  document.getElementById('restoreStatus').textContent = 'Tiklandi ✓';
+  document.getElementById('restoreInput').value = '';
+  showToast("Ma'lumotlar tiklandi");
+  renderAll();
+}
+
+function cancelRestore(){
+  pendingRestoreData = null;
+  document.getElementById('restoreStatus').textContent = '';
+  document.getElementById('restoreInput').value = '';
+}
+
+// ---------- CHIQIM ----------
+async function addExpense(){
+  const amount = parseFloat(document.getElementById('newExpenseAmount').value);
+  const note = document.getElementById('newExpenseNote').value.trim();
+
+  if(isNaN(amount) || amount <= 0){ showToast("Summani to'g'ri kiriting"); return; }
+
+  expenses.push({
+    id: 'exp_' + Date.now(),
+    timestamp: new Date().toISOString(),
+    amount,
+    note
+  });
+  await saveExpenses();
+  document.getElementById('newExpenseAmount').value = '';
+  document.getElementById('newExpenseNote').value = '';
+  showToast("Chiqim qo'shildi");
+  renderAll();
+}
+
+let pendingDeleteExpenseId = null;
+
+function requestDeleteExpense(id){
+  pendingDeleteExpenseId = id;
+  renderExpenseList();
+}
+
+function cancelDeleteExpense(){
+  pendingDeleteExpenseId = null;
+  renderExpenseList();
+}
+
+async function confirmDeleteExpense(id){
+  expenses = expenses.filter(e => e.id !== id);
+  pendingDeleteExpenseId = null;
+  await saveExpenses();
+  renderAll();
+}
+
+function renderExpenseList(){
+  const el = document.getElementById('expenseList');
+  const emptyNote = document.getElementById('expenseEmpty');
+  el.innerHTML = '';
+  emptyNote.style.display = expenses.length === 0 ? 'block' : 'none';
+
+  const sorted = [...expenses].sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 30);
+  sorted.forEach(e=>{
+    const row = document.createElement('div');
+    row.className = 'expense-row';
+    const dateStr = e.timestamp.slice(5,10).split('-').reverse().join('.');
+    const isPending = pendingDeleteExpenseId === e.id;
+    row.innerHTML = `
+      <span class="expense-date">${dateStr}</span>
+      <span class="expense-note">${escapeHtml(e.note || '—')}</span>
+      <span class="expense-amount">−${fmt(e.amount)}</span>
+      ${isPending
+        ? `<button class="icon-btn del" onclick="confirmDeleteExpense('${e.id}')">Ha</button>
+           <button class="icon-btn" onclick="cancelDeleteExpense()">Bekor</button>`
+        : `<button class="icon-btn del" onclick="requestDeleteExpense('${e.id}')">✕</button>`
+      }
+    `;
+    el.appendChild(row);
+  });
+}
+
+// ---------- SOTUV TARIXI ----------
+function renderSalesHistory(){
+  const el = document.getElementById('salesHistoryList');
+  const emptyNote = document.getElementById('salesHistoryEmpty');
+  el.innerHTML = '';
+  emptyNote.style.display = sales.length === 0 ? 'block' : 'none';
+
+  const sorted = [...sales].sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 50);
+  sorted.forEach(s=>{
+    const row = document.createElement('div');
+    row.className = 'sale-row';
+    const itemsSummary = s.items.map(i => `${escapeHtml(i.name)} (${i.qty} m)`).join(', ');
+    row.innerHTML = `
+      <div class="sale-row-top">
+        <span class="sale-date">${formatDateTime(s.timestamp)}</span>
+        <span class="sale-total">${fmt(s.total)}</span>
+      </div>
+      <div class="sale-items">${itemsSummary}</div>
+    `;
+    el.appendChild(row);
+  });
+}
+
+// ---------- HISOBOT ----------
+function renderHisobot(){
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0,10);
+  const monthStr = now.toISOString().slice(0,7);
+
+  const todayTotal = sales.filter(s => s.timestamp.slice(0,10) === todayStr)
+    .reduce((sum,s)=> sum + s.total, 0);
+  const monthSales = sales.filter(s => s.timestamp.slice(0,7) === monthStr);
+  const monthTotal = monthSales.reduce((sum,s)=> sum + s.total, 0);
+  const stockValue = products.reduce((sum,p)=> sum + p.price * p.qty, 0);
+
+  const expenseToday = expenses.filter(e => e.timestamp.slice(0,10) === todayStr)
+    .reduce((sum,e)=> sum + e.amount, 0);
+  const expenseMonth = expenses.filter(e => e.timestamp.slice(0,7) === monthStr)
+    .reduce((sum,e)=> sum + e.amount, 0);
+  const profitToday = todayTotal - expenseToday;
+
+  document.getElementById('statToday').textContent = fmt(todayTotal);
+  document.getElementById('statMonth').textContent = fmt(monthTotal);
+  document.getElementById('statStockValue').textContent = fmt(stockValue);
+  document.getElementById('statExpenseToday').textContent = fmt(expenseToday);
+  document.getElementById('statExpenseMonth').textContent = fmt(expenseMonth);
+  document.getElementById('statProfitToday').textContent = fmt(profitToday);
+
+  renderExpenseList();
+  renderSalesHistory();
+
+  const productTotals = {};
+  monthSales.forEach(s=>{
+    s.items.forEach(item=>{
+      productTotals[item.name] = (productTotals[item.name] || 0) + item.qty;
+    });
+  });
+  const sorted = Object.entries(productTotals).sort((a,b)=> b[1]-a[1]).slice(0,5);
+  const topEl = document.getElementById('topProducts');
+  const topEmpty = document.getElementById('topEmpty');
+  topEl.innerHTML = '';
+  topEmpty.style.display = sorted.length === 0 ? 'block' : 'none';
+  const max = sorted.length ? sorted[0][1] : 1;
+  sorted.forEach(([name, qty])=>{
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = `
+      <div class="bar-name">${escapeHtml(name)}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(qty/max*100).toFixed(0)}%"></div></div>
+      <div class="bar-val">${qty} m</div>
+    `;
+    topEl.appendChild(row);
+  });
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str ?? '';
+  return div.innerHTML;
+}
+
+// ---------- NAV ----------
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-' + btn.dataset.view).classList.add('active');
+  });
+});
+
+document.getElementById('sellBtn').addEventListener('click', finalizeSale);
+document.getElementById('addProductBtn').addEventListener('click', addProduct);
+document.getElementById('addExpenseBtn').addEventListener('click', addExpense);
+document.getElementById('saveApiKeyBtn').addEventListener('click', saveApiKey);
+document.getElementById('exportBtn').addEventListener('click', exportBackup);
+
+loadData();
+</script>
+</body>
+</html>
