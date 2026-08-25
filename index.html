@@ -332,7 +332,7 @@
       <p class="scan-note">Skaner Claude AI'ga so'rov yuborib rasmlarni solishtiradi, shuning uchun shaxsiy API kalit kerak. Kalit faqat shu brauzeringizda saqlanadi — GitHub kodiga yozilmaydi, hech kimga ko'rinmaydi. Kalitni <strong>console.anthropic.com</strong> saytida "API Keys" bo'limidan olasiz. Har bir skanerlash ozgina pul sarflaydi (odatda 1 sentdan kam).</p>
       <div class="field">
         <label>API kalit (sk-ant- bilan boshlanadi)</label>
-        <input type="password" id="apiKeyInput" placeholder="sk-ant-...">
+        <input type="password" id="apiKeyInput" placeholder="Gemini API key...">
       </div>
       <button class="secondary" id="saveApiKeyBtn">Kalitni saqlash</button>
       <div id="apiKeyStatus" class="scan-note" style="margin-top:8px;"></div>
@@ -843,17 +843,17 @@ function renderOmborTable(){
 
 // ---------- API KALIT ----------
 function getApiKey(){
-  return localStorage.getItem('openaiApiKey') || '';
+  return localStorage.getItem('geminiApiKey') || '';
 }
 
 function saveApiKey(){
   const key = document.getElementById('apiKeyInput').value.trim();
   const statusEl = document.getElementById('apiKeyStatus');
-  if(!key.startsWith('sk-')){
-    statusEl.textContent = "Kalit noto'g'ri ko'rinadi (sk- bilan boshlanishi kerak)";
+  if(!key){
+    statusEl.textContent = "API kalitni kiriting";
     return;
   }
-  localStorage.setItem('openaiApiKey', key);
+  localStorage.setItem('geminiApiKey', key);
   document.getElementById('apiKeyInput').value = '';
   statusEl.textContent = 'Kalit saqlandi ✓';
 }
@@ -915,37 +915,44 @@ async function performScan(scannedImageData, context){
   content.push({ type: 'text', text: 'Yuqoridagi ro\'yxatdagi mahsulotlardan ushbu namunaga naqsh, rang va tekstura bo\'yicha eng o\'xshash 5 tasini top. FAQAT quyidagi JSON massivini qaytar, boshqa hech qanday matn, izoh yoki ```json belgisi qo\'shma: [{"id":"mahsulot_id","score":0-100 son,"reason":"o\'zbek tilida bir qisqa jumla"}] — score kamayish tartibida.' });
 
   try{
-    const openaiContent = content.map(item=>{
+    const parts = content.map(item => {
       if(item.type === 'text'){
-        return { type: 'input_text', text: item.text };
+        return { text: item.text };
       }
       if(item.type === 'image'){
         return {
-          type: 'input_image',
-          image_url: `data:${item.source.media_type};base64,${item.source.data}`
+          inline_data: {
+            mime_type: item.source.media_type,
+            data: item.source.data
+          }
         };
       }
       return item;
     });
 
-    const response = await fetch('https://api.openai.com/v1/responses', {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + apiKey
+        'x-goog-api-key': apiKey
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-mini',
-        input: [{ role: 'user', content: openaiContent }],
-        max_output_tokens: 1000
+        contents: [{ role: 'user', parts }],
+        generationConfig: {
+          maxOutputTokens: 1000,
+          responseMimeType: 'application/json'
+        }
       })
     });
     const data = await response.json();
-    if(!response.ok){
+    if(!response.ok || data.error){
       statusEl.textContent = 'API xatolik: ' + (data.error?.message || 'Nomaʼlum xatolik');
       return;
     }
-    const textBlocks = data.output_text || '';
+    const textBlocks = (data.candidates?.[0]?.content?.parts || [])
+      .filter(b => typeof b.text === 'string')
+      .map(b => b.text)
+      .join('\n');
     const clean = textBlocks.replace(/```json|```/g, '').trim();
     let matches;
     try{
