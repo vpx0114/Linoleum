@@ -1250,5 +1250,68 @@ document.getElementById('exportBtn').addEventListener('click', exportBackup);
 
 loadData();
 </script>
+
+<script>
+(function(){
+  function status(text, ok){
+    var el = document.getElementById('localAiStatus');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'localAiStatus';
+      el.style.cssText = 'position:fixed;left:16px;bottom:16px;z-index:99999;padding:10px 14px;border-radius:10px;background:#111;color:#fff;font:14px Arial;max-width:520px;box-shadow:0 4px 18px rgba(0,0,0,.25)';
+      document.body.appendChild(el);
+    }
+    el.textContent = text;
+    el.style.background = ok ? '#176b3a' : '#8a1f1f';
+  }
+
+  window.localAiReady = false;
+  window.localAiModel = null;
+
+  async function startLocalAI(){
+    try{
+      status('Local AI: kutubxonalar tekshirilmoqda…');
+
+      if(typeof window.tf === 'undefined'){
+        throw new Error('TensorFlow.js yuklanmagan. Internet/CDN bloklangan bo‘lishi mumkin.');
+      }
+
+      await window.tf.ready();
+      status('Local AI: TensorFlow tayyor. Model yuklanmoqda…');
+
+      if(typeof window.mobilenet === 'undefined'){
+        throw new Error('MobileNet kutubxonasi yuklanmagan. Internet/CDN bloklangan bo‘lishi mumkin.');
+      }
+
+      var model = await window.mobilenet.load({version: 2, alpha: 1.0});
+
+      if(!model || typeof model.infer !== 'function'){
+        throw new Error('Model yuklandi, lekin infer() mavjud emas.');
+      }
+
+      window.localAiModel = model;
+      window.localAiReady = true;
+      status('Local AI: TAYYOR ✓', true);
+
+      // If the original app has a model status element, update it too.
+      var old = document.getElementById('apiKeyStatus');
+      if(old) old.textContent = 'Model holati: Tayyor ✓';
+
+    }catch(err){
+      console.error('LOCAL AI ERROR:', err);
+      status('Local AI XATO: ' + (err && err.message ? err.message : err));
+      var old = document.getElementById('apiKeyStatus');
+      if(old) old.textContent = 'Model holati: XATO — ' + (err && err.message ? err.message : err);
+    }
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', startLocalAI, {once:true});
+  }else{
+    startLocalAI();
+  }
+})();
+</script>
+
 </body>
 </html>
