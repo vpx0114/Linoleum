@@ -237,6 +237,8 @@
   }
   .toast.show{opacity:1;}
 </style>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
 </head>
 <body>
 <div class="app">
@@ -328,19 +330,14 @@
   <!-- SKANER -->
   <div class="view" id="view-skaner">
     <div class="panel">
-      <h2>Sozlama — Claude API kalit</h2>
-      <p class="scan-note">Skaner Claude AI'ga so'rov yuborib rasmlarni solishtiradi, shuning uchun shaxsiy API kalit kerak. Kalit faqat shu brauzeringizda saqlanadi — GitHub kodiga yozilmaydi, hech kimga ko'rinmaydi. Kalitni <strong>console.anthropic.com</strong> saytida "API Keys" bo'limidan olasiz. Har bir skanerlash ozgina pul sarflaydi (odatda 1 sentdan kam).</p>
-      <div class="field">
-        <label>API kalit (sk-ant- bilan boshlanadi)</label>
-        <input type="password" id="apiKeyInput" placeholder="Gemini API key...">
-      </div>
-      <button class="secondary" id="saveApiKeyBtn">Kalitni saqlash</button>
-      <div id="apiKeyStatus" class="scan-note" style="margin-top:8px;"></div>
+      <h2>Sozlama — Local AI</h2>
+      <p class="scan-note">Skaner internetdagi API'ga so'rov yubormaydi. AI model brauzerning o'zida ishlaydi va mahsulot rasmlarini lokal ravishda solishtiradi. Birinchi marta modelni yuklash uchun internet kerak bo'ladi, keyingi ishlash model brauzer keshida saqlangan bo'lsa lokal davom etadi.</p>
+      <div id="apiKeyStatus" class="scan-note" style="margin-top:8px;">Model holati: yuklanmoqda...</div>
     </div>
 
     <div class="panel" style="margin-top:16px;">
       <h2>Linoleumni skanerlash</h2>
-      <p class="scan-note">Kamerani namunaga qarating va suratga oling — ombordagi <strong>rasmi biriktirilgan</strong> mahsulotlar bilan solishtirilib, eng o'xshash 5 tasi ko'rsatiladi. Aniqlik taxminiy — kod/QR usuliga qaraganda kamroq ishonchli.</p>
+      <p class="scan-note">Kamerani namunaga qarating va suratga oling — ombordagi <strong>rasmi biriktirilgan</strong> mahsulotlar bilan Local AI yordamida solishtirilib, eng o'xshash 5 tasi ko'rsatiladi.</p>
       <label class="scan-upload-btn" for="scanInput">📷 Suratga olish / rasm tanlash</label>
       <input type="file" id="scanInput" accept="image/*" capture="environment" onchange="handleScanFile(this,'skaner')" style="display:none;">
       <div class="scan-preview" id="scanPreviewWrap"></div>
@@ -841,31 +838,60 @@ function renderOmborTable(){
   });
 }
 
-// ---------- API KALIT ----------
-function getApiKey(){
-  return localStorage.getItem('geminiApiKey') || '';
+// ---------- LOCAL AI SKANER ----------
+let localVisionModel = null;
+let localVisionLoading = null;
+const localEmbeddingCache = new Map();
+
+function getApiKey(){ return ''; }
+function saveApiKey(){ return true; }
+
+async function loadLocalVisionModel(){
+  if(localVisionModel) return localVisionModel;
+  if(localVisionLoading) return localVisionLoading;
+  const statusEls = [document.getElementById('apiKeyStatus')].filter(Boolean);
+  const setStatus = msg => statusEls.forEach(el => el.textContent = msg);
+  localVisionLoading = (async()=>{
+    setStatus('Model holati: yuklanmoqda...');
+    if(typeof tf === 'undefined' || typeof mobilenet === 'undefined'){
+      throw new Error('Local AI kutubxonasi yuklanmadi. Internet ulanishini tekshiring.');
+    }
+    await tf.ready();
+    localVisionModel = await mobilenet.load({version: 2, alpha: 1.0});
+    setStatus('Model holati: tayyor ✓');
+    return localVisionModel;
+  })();
+  try { return await localVisionLoading; }
+  finally { localVisionLoading = null; }
 }
 
-function saveApiKey(){
-  const key = document.getElementById('apiKeyInput').value.trim();
-  const statusEl = document.getElementById('apiKeyStatus');
-  if(!key){
-    statusEl.textContent = "API kalitni kiriting";
-    return;
-  }
-  localStorage.setItem('geminiApiKey', key);
-  document.getElementById('apiKeyInput').value = '';
-  statusEl.textContent = 'Kalit saqlandi ✓';
+function imageElementFromDataUrl(dataUrl){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    img.onload = ()=>resolve(img);
+    img.onerror = ()=>reject(new Error('Rasmni o\'qib bo\'lmadi'));
+    img.src = dataUrl;
+  });
 }
 
-// ---------- SKANER ----------
-const SCAN_CTX = {
-  skaner: { preview: 'scanPreviewWrap', status: 'scanStatus', resultsPanel: 'scanResultsPanel', results: 'scanResults' },
-  kassa:  { preview: 'kassaScanPreviewWrap', status: 'kassaScanStatus', resultsPanel: 'kassaScanResultsPanel', results: 'kassaScanResults' }
-};
+async function getImageEmbedding(dataUrl){
+  const model = await loadLocalVisionModel();
+  const img = await imageElementFromDataUrl(dataUrl);
+  const embeddingTensor = model.infer(img, true);
+  const values = await embeddingTensor.data();
+  const arr = Array.from(values);
+  embeddingTensor.dispose();
+  let norm = 0;
+  for(const v of arr) norm += v*v;
+  norm = Math.sqrt(norm) || 1;
+  return arr.map(v => v / norm);
+}
 
-function base64Only(dataUrl){
-  return dataUrl.split(',')[1];
+function cosineSimilarity(a,b){
+  let sum = 0;
+  const n = Math.min(a.length,b.length);
+  for(let i=0;i<n;i++) sum += a[i]*b[i];
+  return Math.max(0, Math.min(1, sum));
 }
 
 async function handleScanFile(input, context){
@@ -888,83 +914,40 @@ async function handleScanFile(input, context){
 async function performScan(scannedImageData, context){
   const c = SCAN_CTX[context];
   const statusEl = document.getElementById(c.status);
-  const apiKey = getApiKey();
-
-  if(!apiKey){
-    statusEl.textContent = "Avval Skaner bo'limida API kalitni kiritib saqlang.";
-    return;
-  }
-
   const withImages = products.filter(p => p.image);
   if(withImages.length === 0){
     statusEl.textContent = "Hech qaysi mahsulotda rasm yo'q — avval Ombor bo'limida mahsulotlarga rasm qo'shing.";
     return;
   }
 
-  statusEl.textContent = `Solishtirilmoqda... (${withImages.length} ta mahsulot bilan)`;
-
-  const content = [
-    { type: 'text', text: "Quyida do'kondagi mahsulotlar ro'yxati va har birining rasmi keladi (ID va nomi bilan)." }
-  ];
-  withImages.forEach(p=>{
-    content.push({ type: 'text', text: `ID: ${p.id} | Nomi: ${p.name}` });
-    content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64Only(p.image) } });
-  });
-  content.push({ type: 'text', text: 'Endi mijoz kamerada suratga olgan linoleum namunasi:' });
-  content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64Only(scannedImageData) } });
-  content.push({ type: 'text', text: 'Yuqoridagi ro\'yxatdagi mahsulotlardan ushbu namunaga naqsh, rang va tekstura bo\'yicha eng o\'xshash 5 tasini top. FAQAT quyidagi JSON massivini qaytar, boshqa hech qanday matn, izoh yoki ```json belgisi qo\'shma: [{"id":"mahsulot_id","score":0-100 son,"reason":"o\'zbek tilida bir qisqa jumla"}] — score kamayish tartibida.' });
-
   try{
-    const parts = content.map(item => {
-      if(item.type === 'text'){
-        return { text: item.text };
-      }
-      if(item.type === 'image'){
-        return {
-          inline_data: {
-            mime_type: item.source.media_type,
-            data: item.source.data
-          }
-        };
-      }
-      return item;
-    });
+    await loadLocalVisionModel();
+    statusEl.textContent = `AI analiz qilmoqda... (0/${withImages.length})`;
+    const queryEmbedding = await getImageEmbedding(scannedImageData);
+    const matches = [];
 
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': apiKey
-      },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts }],
-        generationConfig: {
-          maxOutputTokens: 1000,
-          responseMimeType: 'application/json'
-        }
-      })
-    });
-    const data = await response.json();
-    if(!response.ok || data.error){
-      statusEl.textContent = 'API xatolik: ' + (data.error?.message || 'Nomaʼlum xatolik');
-      return;
+    for(let i=0;i<withImages.length;i++){
+      const p = withImages[i];
+      let embedding = localEmbeddingCache.get(p.id);
+      if(!embedding){
+        embedding = await getImageEmbedding(p.image);
+        localEmbeddingCache.set(p.id, embedding);
+      }
+      const similarity = cosineSimilarity(queryEmbedding, embedding);
+      matches.push({
+        id: p.id,
+        score: Math.round(similarity * 100),
+        reason: 'Rang, shakl va umumiy vizual o‘xshashlik bo‘yicha'
+      });
+      statusEl.textContent = `AI analiz qilmoqda... (${i+1}/${withImages.length})`;
+      await new Promise(requestAnimationFrame);
     }
-    const textBlocks = (data.candidates?.[0]?.content?.parts || [])
-      .filter(b => typeof b.text === 'string')
-      .map(b => b.text)
-      .join('\n');
-    const clean = textBlocks.replace(/```json|```/g, '').trim();
-    let matches;
-    try{
-      matches = JSON.parse(clean);
-    }catch(parseErr){
-      statusEl.textContent = "Natijani o'qib bo'lmadi, qayta urinib ko'ring.";
-      return;
-    }
-    renderScanResults(matches, context);
-    statusEl.textContent = '';
+
+    matches.sort((a,b)=>b.score-a.score);
+    renderScanResults(matches.slice(0,5), context);
+    statusEl.textContent = 'Local AI tahlili tugadi ✓';
   }catch(e){
-    statusEl.textContent = 'Xatolik: ' + e.message;
+    statusEl.textContent = 'Local AI xatolik: ' + e.message;
   }
 }
 
@@ -1227,7 +1210,6 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
 document.getElementById('sellBtn').addEventListener('click', finalizeSale);
 document.getElementById('addProductBtn').addEventListener('click', addProduct);
 document.getElementById('addExpenseBtn').addEventListener('click', addExpense);
-document.getElementById('saveApiKeyBtn').addEventListener('click', saveApiKey);
 document.getElementById('exportBtn').addEventListener('click', exportBackup);
 
 loadData();
