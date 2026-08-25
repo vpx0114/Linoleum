@@ -1,332 +1,1191 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ombor Boshqaruvi va Telegram Bildirishnoma Tizimi</title>
-    <style>
-        :root {
-            --primary-color: #2b5876;
-            --secondary-color: #4e4376;
-            --success-color: #28a745;
-            --danger-color: #dc3545;
-            --bg-color: #f4f7f6;
-            --card-bg: #ffffff;
-            --text-color: #333333;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linoleum — Do'kon tizimi</title>
+<style>
+  :root{
+    --bg:#18160f;
+    --surface:#252017;
+    --surface-2:#2f291d;
+    --line:#443c2a;
+    --text:#f2ead9;
+    --muted:#a89878;
+    --accent:#d69a3b;
+    --accent-dim:#8a6220;
+    --danger:#c0604a;
+    --success:#7fa06a;
+    --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --shadow: 0 2px 10px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(214,154,59,0.07), transparent 40%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--sans); min-height:100vh;
+  }
+  .app{max-width:1040px; margin:0 auto; padding:22px 16px 70px;}
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+  header{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;}
+  header .brand{display:flex; align-items:center; gap:10px;}
+  header .logo{
+    width:36px; height:36px; border-radius:9px; background:linear-gradient(145deg, var(--accent), var(--accent-dim));
+    display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;
+  }
+  header h1{font-size:19px; font-weight:700; letter-spacing:0.2px; margin:0; line-height:1.2;}
+  header .sub{font-size:11px; color:var(--muted); margin-top:1px;}
+  header .tag{font-family:var(--mono); font-size:10.5px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; background:var(--surface); border:1px solid var(--line); padding:5px 10px; border-radius:20px;}
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
+  nav{
+    display:flex; gap:4px; background:var(--surface); border:1px solid var(--line);
+    border-radius:12px; padding:4px; margin-bottom:20px; overflow-x:auto;
+  }
+  nav button{
+    flex:1; white-space:nowrap; background:none; border:none; color:var(--muted);
+    font-family:var(--sans); font-size:13.5px; font-weight:600; padding:10px 14px;
+    cursor:pointer; border-radius:8px; transition:background .15s, color .15s;
+  }
+  nav button.active{background:var(--accent); color:#1c1a17;}
+  nav button:hover:not(.active){color:var(--text); background:var(--surface-2);}
 
-        .container {
-            background-color: var(--card-bg);
-            width: 100%;
-            max-width: 550px;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-        }
+  .view{display:none; animation:fadeIn .18s ease;}
+  .view.active{display:block;}
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(3px);} to{opacity:1; transform:translateY(0);} }
 
-        .header-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #eef2f5;
-        }
+  .grid{display:grid; grid-template-columns:1.3fr 1fr; gap:16px;}
+  @media (max-width:720px){ .grid{grid-template-columns:1fr;} }
 
-        .header-bar h2 {
-            font-size: 20px;
-            color: var(--primary-color);
-        }
+  .panel{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px; box-shadow:var(--shadow);}
+  .panel h2{font-size:12.5px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin:0 0 12px; display:flex; align-items:center; justify-content:space-between;}
 
-        .action-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+  .product-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 8px; border-radius:8px; cursor:pointer; gap:10px; transition:background .12s;
+  }
+  .product-row:hover{background:var(--surface-2);}
+  .product-row:active{transform:scale(.995);}
+  .product-row .pleft{display:flex; align-items:center; gap:10px; min-width:0;}
+  .pthumb{
+    width:40px; height:40px; border-radius:8px; object-fit:cover;
+    background:var(--surface-2); border:1px solid var(--line); flex-shrink:0;
+  }
+  .pthumb-placeholder{
+    width:40px; height:40px; border-radius:8px; background:var(--surface-2);
+    border:1px solid var(--line); flex-shrink:0; display:flex; align-items:center;
+    justify-content:center; color:var(--muted); font-size:15px;
+  }
+  .product-row .pname{font-weight:600; font-size:14px;}
+  .product-row .pmeta{font-family:var(--mono); font-size:11px; color:var(--muted);}
+  .product-row .pprice{font-family:var(--mono); font-size:14px; color:var(--accent); text-align:right;}
+  .product-row .pstock{font-size:11px; color:var(--muted); text-align:right;}
+  .low{color:var(--danger) !important; font-weight:700;}
 
-        .btn {
-            padding: 10px 16px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #ffffff;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background 0.3s ease, transform 0.1s ease;
-        }
+  .receipt{
+    background:var(--surface);
+    border:1px dashed var(--line); border-radius:12px; padding:16px;
+    display:flex; flex-direction:column; min-height:340px; box-shadow:var(--shadow);
+  }
+  .receipt-items{flex:1; margin-bottom:12px; max-height:280px; overflow-y:auto;}
+  .receipt-item{
+    display:flex; justify-content:space-between; align-items:center; gap:6px;
+    font-family:var(--mono); font-size:12.5px; padding:7px 0; border-bottom:1px dotted var(--line);
+  }
+  .receipt-item .rname{color:var(--text); max-width:30%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .receipt-item .rqty{color:var(--muted); white-space:nowrap; display:flex; align-items:center; gap:3px;}
+  .receipt-item .rline{min-width:60px; text-align:right; color:var(--text);}
+  .receipt-item button{background:none; border:none; color:var(--danger); cursor:pointer; font-size:15px; padding:0 4px;}
+  .receipt-item input.price-edit{
+    width:62px; background:var(--bg); border:1px solid var(--line); color:var(--accent);
+    font-family:var(--mono); font-size:12px; border-radius:4px; padding:3px 4px; text-align:right;
+  }
+  .receipt-item input.price-edit:focus{outline:none; border-color:var(--accent);}
+  .receipt-item input.qty-edit{
+    width:46px; background:var(--bg); border:1px solid var(--line); color:var(--text);
+    font-family:var(--mono); font-size:12px; border-radius:4px; padding:3px 4px; text-align:center;
+  }
+  .receipt-item input.qty-edit:focus{outline:none; border-color:var(--accent);}
+  .receipt-empty{color:var(--muted); font-size:12.5px; text-align:center; padding:34px 0; font-family:var(--mono);}
 
-        .btn:active {
-            transform: scale(0.98);
-        }
+  .receipt-total{
+    display:flex; justify-content:space-between; align-items:baseline;
+    border-top:1px solid var(--line); padding-top:12px; margin-bottom:12px;
+  }
+  .receipt-total .label{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:1px;}
+  .receipt-total .value{font-family:var(--mono); font-size:27px; font-weight:700; color:var(--accent);}
 
-        .btn-success {
-            background-color: var(--success-color);
-        }
+  button.primary{
+    background:var(--accent); color:#1c1a17; border:none; border-radius:9px;
+    padding:12px; font-weight:700; font-size:14px; cursor:pointer; width:100%;
+    transition:transform .1s, opacity .1s;
+  }
+  button.primary:hover:not(:disabled){transform:translateY(-1px);}
+  button.primary:disabled{background:var(--accent-dim); color:#6b5c42; cursor:not-allowed;}
+  button.secondary{
+    background:var(--surface-2); color:var(--text); border:1px solid var(--line); border-radius:9px;
+    padding:10px 14px; font-weight:600; font-size:13px; cursor:pointer; transition:border-color .12s;
+  }
+  button.secondary:hover{border-color:var(--accent);}
 
-        .btn-success:hover {
-            background-color: #218838;
-        }
+  input, select{
+    background:var(--bg); border:1px solid var(--line); color:var(--text);
+    border-radius:7px; padding:9px 10px; font-family:var(--sans); font-size:13px; width:100%;
+  }
+  input:focus, select:focus{outline:none; border-color:var(--accent);}
+  label{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:4px;}
+  .field{margin-bottom:10px;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
 
-        .btn-danger {
-            background-color: var(--danger-color);
-            width: 100%;
-            padding: 12px;
-            font-size: 15px;
-            margin-top: 10px;
-        }
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{text-align:left; color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:0.5px; padding:8px 6px; border-bottom:1px solid var(--line);}
+  td{padding:9px 6px; border-bottom:1px solid var(--line);}
+  td.num, th.num{text-align:right; font-family:var(--mono);}
+  tr.editing td{background:var(--surface-2);}
+  .icon-btn{background:none; border:none; color:var(--muted); cursor:pointer; font-size:12.5px; padding:3px 7px; border-radius:6px;}
+  .icon-btn:hover{color:var(--accent); background:var(--surface-2);}
+  .icon-btn.add{color:var(--success); font-weight:bold;}
+  .icon-btn.add:hover{background:rgba(127,160,106,0.2);}
+  .icon-btn.del:hover{color:var(--danger);}
+  .table-thumb{width:34px; height:34px; border-radius:7px; object-fit:cover; background:var(--surface-2); border:1px solid var(--line);}
+  .table-thumb-placeholder{
+    width:34px; height:34px; border-radius:7px; background:var(--surface-2); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:13px;
+  }
+  .edit-cell input[type="text"], .edit-cell input[type="number"]{padding:6px 8px; font-size:12.5px;}
+  .edit-cell input[type="file"]{padding:4px; font-size:11px;}
+  .edit-actions{display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;}
+  .img-upload-row{display:flex; align-items:center; gap:10px; margin-bottom:10px;}
+  .img-preview{
+    width:56px; height:56px; border-radius:9px; object-fit:cover;
+    background:var(--surface-2); border:1px solid var(--line); flex-shrink:0;
+  }
+  .img-preview-placeholder{
+    width:56px; height:56px; border-radius:9px; background:var(--surface-2); border:1px dashed var(--line);
+    display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:11px; flex-shrink:0; text-align:center;
+  }
 
-        .btn-danger:hover {
-            background-color: #c82333;
-        }
+  .stat-cards{display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:18px;}
+  .stat-card{background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:11px; padding:14px 16px; box-shadow:var(--shadow);}
+  .stat-card.exp{border-left-color:var(--danger);}
+  .stat-card.profit{border-left-color:var(--success);}
+  .stat-card .slabel{font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:1px;}
+  .stat-card .sval{font-family:var(--mono); font-size:22px; font-weight:700; color:var(--accent); margin-top:6px;}
+  .stat-card.exp .sval{color:var(--danger);}
+  .stat-card.profit .sval{color:var(--success);}
 
-        .more-btn {
-            background: none;
-            border: none;
-            font-size: 24px;
-            color: #666;
-            cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 4px;
-            transition: background 0.2s;
-        }
+  .expense-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:9px 6px; border-bottom:1px solid var(--line); font-size:13px;
+  }
+  .expense-row:last-child{border-bottom:none;}
+  .expense-date{font-family:var(--mono); font-size:11px; color:var(--muted); width:76px; flex-shrink:0;}
+  .expense-note{flex:1; color:var(--text); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .expense-amount{font-family:var(--mono); color:var(--danger); font-weight:600; white-space:nowrap;}
 
-        .more-btn:hover {
-            background-color: #e9ecef;
-        }
+  .sale-row{padding:10px 6px; border-bottom:1px solid var(--line);}
+  .sale-row:last-child{border-bottom:none;}
+  .sale-row-top{display:flex; justify-content:space-between; align-items:baseline; gap:10px;}
+  .sale-date{font-family:var(--mono); font-size:11px; color:var(--muted);}
+  .sale-total{font-family:var(--mono); font-weight:700; color:var(--accent); font-size:14px;}
+  .sale-items{font-size:11.5px; color:var(--muted); margin-top:3px; line-height:1.5;}
 
-        /* Yashirin Sozlamalar Paneli */
-        .settings-panel {
-            display: none;
-            background-color: #f8f9fa;
-            border: 1px solid #dde2e5;
-            border-radius: 8px;
-            padding: 18px;
-            margin-bottom: 25px;
-            animation: fadeIn 0.3s ease-in-out;
-        }
+  .bar-row{display:flex; align-items:center; gap:10px; margin-bottom:8px;}
+  .bar-name{width:120px; font-size:12px; color:var(--text); flex-shrink:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .bar-track{flex:1; background:var(--surface-2); border-radius:4px; height:16px; overflow:hidden;}
+  .bar-fill{background:var(--accent); height:100%;}
+  .bar-val{font-family:var(--mono); font-size:11px; color:var(--muted); width:70px; text-align:right;}
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+  .empty-note{color:var(--muted); font-size:13.3px; text-align:center; padding:22px;}
 
-        .settings-panel h3 {
-            font-size: 16px;
-            margin-bottom: 12px;
-            color: var(--secondary-color);
-        }
+  .scan-note{color:var(--muted); font-size:12.5px; line-height:1.6; margin:0 0 14px;}
+  .scan-upload-btn{
+    display:inline-block; background:var(--accent); color:#1c1a17; border-radius:9px;
+    padding:12px 20px; font-weight:700; font-size:14px; cursor:pointer; transition:transform .1s; text-align:center;
+  }
+  .scan-upload-btn:hover{transform:translateY(-1px);}
 
-        .form-group {
-            margin-bottom: 15px;
-        }
+  .mode-switch{
+    display:flex; background:var(--bg); border:1px solid var(--line);
+    border-radius:10px; padding:3px; margin-bottom:14px;
+  }
+  .mode-switch-btn{
+    flex:1; background:none; border:none; color:var(--muted); font-family:var(--sans);
+    font-size:12.5px; font-weight:600; padding:8px 12px; border-radius:7px; cursor:pointer;
+    transition:all .18s ease; display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .mode-switch-btn.active{
+    background:var(--surface-2); color:var(--accent); border:1px solid var(--accent-dim); box-shadow:0 2px 6px rgba(0,0,0,.2);
+  }
 
-        .form-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 6px;
-            color: #555;
-        }
+  .white-scan-btn{
+    background:#ffffff; color:#18160f; border:none; font-weight:700; border-radius:9px;
+    padding:12px 20px; font-size:14px; cursor:pointer; transition:opacity .15s; margin-top:8px; display:inline-block; width:100%; text-align:center;
+  }
+  .white-scan-btn:hover{opacity:0.9;}
 
-        .form-group input {
-            width: 100%;
-            padding: 10px;
-            font-size: 14px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
+  .camera-container{
+    position:relative; width:100%; max-width:400px; background:#000; border-radius:12px; overflow:hidden; border:1px solid var(--line); margin-top:10px; display:none;
+  }
+  .camera-container video{ width:100%; height:auto; display:block; }
 
-        .form-group input:focus {
-            border-color: var(--primary-color);
-        }
+  .scan-preview img{width:130px; height:130px; object-fit:cover; border-radius:9px; border:1px solid var(--line); margin-top:12px;}
+  .scan-status{margin-top:10px; font-size:12.5px; color:var(--muted); font-family:var(--mono);}
+  .scan-result-row{
+    display:flex; align-items:center; gap:12px; padding:10px 6px; border-bottom:1px solid var(--line);
+  }
+  .scan-result-row:last-child{border-bottom:none;}
+  .scan-result-thumb{width:50px; height:50px; border-radius:9px; object-fit:cover; border:1px solid var(--line); flex-shrink:0;}
+  .scan-result-info{flex:1; min-width:0;}
+  .scan-result-name{font-weight:600; font-size:13.5px;}
+  .scan-score-track{background:var(--surface-2); border-radius:4px; height:6px; margin-top:6px; overflow:hidden;}
+  .scan-score-fill{background:var(--accent); height:100%;}
+  .scan-score-pct{font-family:var(--mono); font-size:12.5px; color:var(--accent); width:38px; text-align:right; flex-shrink:0;}
+  .scan-select-btn{
+    background:var(--surface-2); border:1px solid var(--line); color:var(--accent);
+    border-radius:7px; padding:6px 10px; font-size:11.5px; font-weight:600; cursor:pointer; white-space:nowrap; flex-shrink:0;
+  }
+  .scan-select-btn:hover{border-color:var(--accent);}
 
-        .btn-primary {
-            background-color: var(--primary-color);
-            width: 100%;
-        }
+  .settings-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;}
 
-        .btn-primary:hover {
-            background-color: #1a3c52;
-        }
+  /* Yashirin Telegram Sozlamalar Pop-up paneli */
+  .dots-btn{
+    background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; padding:2px 6px; border-radius:4px;
+  }
+  .dots-btn:hover{color:var(--accent); background:var(--surface-2);}
 
-        .section-title {
-            font-size: 16px;
-            margin-bottom: 15px;
-            color: #444;
-        }
+  .tg-settings-popup {
+    display: none; background: var(--surface-2); border: 1px solid var(--line);
+    border-radius: 9px; padding: 14px; margin-bottom: 12px;
+  }
 
-        hr {
-            border: 0;
-            height: 1px;
-            background-color: #eef2f5;
-            margin: 20px 0;
-        }
-    </style>
+  .toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    background:var(--surface-2); border:1px solid var(--accent); color:var(--text);
+    padding:10px 18px; border-radius:9px; font-size:13px; opacity:0; transition:opacity .2s;
+    pointer-events:none; box-shadow:var(--shadow); z-index:100;
+  }
+  .toast.show{opacity:1;}
+</style>
 </head>
 <body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="logo">🧱</div>
+      <div>
+        <h1>Linoleum — Do'kon tizimi</h1>
+        <div class="sub">Kassa · Ombor · Skaner · Hisobot</div>
+      </div>
+    </div>
+    <span class="tag" id="statusTag">yuklanmoqda...</span>
+  </header>
 
-    <div class="container">
-        <!-- Yuqori panel va harakatlar -->
-        <div class="header-bar">
-            <h2>Ombor Nazorati</h2>
-            <div class="action-group">
-                <button class="btn btn-success" id="sendReportBtn" onclick="yuborHisobot()">Hisobotni yubor</button>
-                <button class="more-btn" onclick="toggleSettings()" title="Sozlamalar">⋮</button>
-            </div>
+  <nav>
+    <button class="tab-btn active" data-view="kassa" onclick="switchTab('kassa')">💵 Kassa</button>
+    <button class="tab-btn" data-view="ombor" onclick="switchTab('ombor')">📦 Ombor</button>
+    <button class="tab-btn" data-view="skaner" onclick="switchTab('skaner')">📷 Skaner</button>
+    <button class="tab-btn" data-view="hisobot" onclick="switchTab('hisobot')">📊 Hisobot</button>
+  </nav>
+
+  <!-- KASSA -->
+  <div class="view active" id="view-kassa">
+    <div class="grid">
+      <div class="panel">
+        <h2>Mahsulotlar</h2>
+        <div id="kassaProductList"></div>
+      </div>
+      <div class="receipt">
+        <h2 style="margin-bottom:10px;">🧾 Chek</h2>
+        <div class="receipt-items" id="receiptItems">
+          <div class="receipt-empty">Savat bo'sh</div>
         </div>
-
-        <!-- Yashirin Telegram Sozlamalari Paneli -->
-        <div id="settingsPanel" class="settings-panel">
-            <h3>Telegram Bot Sozlamalari</h3>
-            <div class="form-group">
-                <label for="botToken">Bot Token:</label>
-                <input type="password" id="botToken" placeholder="123456789:AA... bot tokeningiz">
-            </div>
-            <div class="form-group">
-                <label for="chatId">Chat ID / Guruh ID:</label>
-                <input type="text" id="chatId" placeholder="-100xxxxxxx yoki shaxsiy ID">
-            </div>
-            <button class="btn btn-primary" onclick="saqlashSettings()">Sozlamalarni saqlash</button>
+        <div class="receipt-total">
+          <span class="label">Jami</span>
+          <span class="value" id="receiptTotal">0</span>
         </div>
-
-        <!-- Ombor Kirim/Chiqim Bo'limi -->
-        <h3 class="section-title">Mahsulot Qoldig'ini Tekshirish</h3>
-        
-        <div class="form-group">
-            <label for="hujjatRaqami">Hujjat Raqami:</label>
-            <input type="text" id="hujjatRaqami" placeholder="Masalan: 1045">
-        </div>
-
-        <div class="form-group">
-            <label for="qoldiqMetr">Hozirgi Qoldiq (metr):</label>
-            <input type="number" id="qoldiqMetr" placeholder="Masalan: 2.5" step="0.01">
-        </div>
-
-        <button class="btn btn-danger" onclick="tekshirishVaYuborish()">Qoldiqni saqlash va tekshirish</button>
+        <button class="primary" id="sellBtn" onclick="checkout()" disabled>Sotish</button>
+      </div>
     </div>
 
-    <script>
-        // Sahifa yuklanganda mavjud saqlangan ma'lumotlarni chiqarish
-        document.addEventListener('DOMContentLoaded', function() {
-            if (localStorage.getItem('bot_token')) {
-                document.getElementById('botToken').value = localStorage.getItem('bot_token');
-            }
-            if (localStorage.getItem('chat_id')) {
-                document.getElementById('chatId').value = localStorage.getItem('chat_id');
-            }
-        });
+    <!-- KASSA UCHUN IKKI REJIMLI SKANER -->
+    <div class="panel" style="margin-top:16px;">
+      <h2>Tez skanerlash (AI)</h2>
+      <div class="mode-switch">
+        <button type="button" class="mode-switch-btn active" id="kassaBtnModeFile" onclick="setCameraMode('file', 'kassa')">📁 Standard (Surat/Fayl)</button>
+        <button type="button" class="mode-switch-btn" id="kassaBtnModeLive" onclick="setCameraMode('live', 'kassa')">📹 Jonli Kamera</button>
+      </div>
 
-        // Uchta nuqta (⋮) tugmasi orqali Sozlamalar panelini yashirish va ko'rsatish
-        function toggleSettings() {
-            const panel = document.getElementById('settingsPanel');
-            if (panel.style.display === 'none' || panel.style.display === '') {
-                panel.style.display = 'block';
-            } else {
-                panel.style.display = 'none';
-            }
-        }
+      <div class="camera-container" id="kassaCameraWrap">
+        <video id="kassaWebcamVideo" autoplay playsinline></video>
+      </div>
 
-        // Sozlamalarni brauzer xotirasiga (localStorage) saqlash
-        function saqlashSettings() {
-            const token = document.getElementById('botToken').value.trim();
-            const chat = document.getElementById('chatId').value.trim();
+      <button type="button" class="white-scan-btn" id="kassaSnapAndScanBtn" style="display:none;" onclick="snapAndScan('kassa')">📸 Suratga olish va qidirish</button>
 
-            if (!token || !chat) {
-                alert("Iltimos, Bot Token va Chat ID maydonlarini to'liq kiriting!");
-                return;
-            }
+      <div id="kassaFileScanContainer">
+        <label class="scan-upload-btn" for="kassaScanInput" style="width:100%; text-align:center;">📷 Suratga olish / rasm tanlash</label>
+        <input type="file" id="kassaScanInput" accept="image/*" capture="environment" onchange="handleScanFile(this,'kassa')" style="display:none;">
+      </div>
 
-            localStorage.setItem('bot_token', token);
-            localStorage.setItem('chat_id', chat);
+      <div class="scan-preview" id="kassaScanPreviewWrap"></div>
+      <div class="scan-status" id="kassaScanStatus"></div>
+      
+      <div id="kassaScanResultsPanel" style="display:none; margin-top:12px;">
+        <h2 style="font-size:11px;">Topilgan mahsulotlar:</h2>
+        <div id="kassaScanResults"></div>
+      </div>
+    </div>
+  </div>
 
-            alert("Telegram sozlamalari muvaffaqiyatli saqlandi!");
-            document.getElementById('settingsPanel').style.display = 'none'; // Saqlangach panelni yopish
-        }
+  <!-- OMBOR -->
+  <div class="view" id="view-ombor">
+    <div class="panel">
+      <h2>Yangi mahsulot qo'shish</h2>
+      <div class="img-upload-row">
+        <div id="newImagePreviewWrap"><div class="img-preview-placeholder">Rasm yo'q</div></div>
+        <div style="flex:1;">
+          <label>Mahsulot rasmi</label>
+          <input type="file" id="newImageInput" accept="image/*" onchange="handleNewImageFile(this)">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Nomi</label><input id="newName" placeholder="masalan: Tarkett Premium 3m"></div>
+        <div class="field"><label>Hujjat raqami</label><input id="newDoc" placeholder="ishlab chiqaruvchi kodi"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Narxi (so'm / m)</label><input id="newPrice" type="number" placeholder="0"></div>
+        <div class="field"><label>Boshlang'ich qoldiq (m)</label><input id="newQty" type="number" placeholder="0"></div>
+      </div>
+      <button class="secondary" id="addProductBtn" style="width:100%;" onclick="addNewProduct()">+ Qo'shish</button>
+    </div>
+    <div class="panel" style="margin-top:16px;">
+      <h2>Ombordagi mahsulotlar</h2>
+      <!-- OMBOR QIDIRUV MAYDONI -->
+      <div class="field" style="margin-bottom:14px;">
+        <input type="text" id="omborSearchInput" placeholder="🔍 Hujjat raqami yoki nomi bo'yicha qidiruv..." oninput="renderOmborTable()">
+      </div>
+      <table>
+        <thead>
+          <tr><th></th><th>Nomi</th><th>Hujjat №</th><th class="num">Narx (so'm/m)</th><th class="num">Qoldiq (m)</th><th>Amallar</th></tr>
+        </thead>
+        <tbody id="omborTableBody"></tbody>
+      </table>
+      <div id="omborEmpty" class="empty-note" style="display:none;">Hali mahsulot qo'shilmagan</div>
+    </div>
+  </div>
 
-        // Telegram API orqali xabar yuboruvchi universal funksiya
-        function telegramgaYubor(matn) {
-            const token = localStorage.getItem('bot_token');
-            const chatId = localStorage.getItem('chat_id');
+  <!-- SKANER -->
+  <div class="view" id="view-skaner">
+    <div class="panel">
+      <h2>Linoleumni skanerlash (Local AI)</h2>
+      <p class="scan-note">Kamerani namunaga qarating va oq tugma yordamida suratga oling — ombordagi <strong>rasmi biriktirilgan</strong> mahsulotlar bilan solishtiriladi.</p>
+      
+      <div class="mode-switch">
+        <button type="button" class="mode-switch-btn active" id="btnModeFile" onclick="setCameraMode('file', 'skaner')">📁 Standard (Surat/Fayl)</button>
+        <button type="button" class="mode-switch-btn" id="btnModeLive" onclick="setCameraMode('live', 'skaner')">📹 Jonli Kamera</button>
+      </div>
 
-            if (!token || !chatId) {
-                alert("Telegram Bot Token yoki Chat ID topilmadi! O'ng yuqoridagi (⋮) tugmasini bosib sozlamalarni saqlang.");
-                return;
-            }
+      <div class="camera-container" id="cameraWrap">
+        <video id="webcamVideo" autoplay playsinline></video>
+      </div>
 
-            const url = `https://api.telegram.org/bot${token}/sendMessage`;
+      <button type="button" class="white-scan-btn" id="snapAndScanBtn" style="display:none;" onclick="snapAndScan('skaner')">📸 Suratga olish va qidirish</button>
 
-            fetch(url, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json' 
-                },
-                body: JSON.stringify({
-                    chat_id: chatId,
-                    text: matn
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.ok) {
-                    alert("Xabar Telegram'ga muvaffaqiyatli yuborildi!");
-                } else {
-                    alert("Telegram API Xatoligi: " + data.description);
-                }
-            })
-            .catch(error => {
-                alert("Xabar yuborishda tarmoq xatoligi yuz berdi: " + error);
+      <div id="fileScanContainer">
+        <label class="scan-upload-btn" for="scanInput" style="width:100%; text-align:center;">📷 Suratga olish / rasm tanlash</label>
+        <input type="file" id="scanInput" accept="image/*" capture="environment" onchange="handleScanFile(this,'skaner')" style="display:none;">
+      </div>
+
+      <div class="scan-preview" id="scanPreviewWrap"></div>
+      <div class="scan-status" id="scanStatus"></div>
+    </div>
+
+    <div class="panel" id="scanResultsPanel" style="margin-top:16px; display:none;">
+      <h2>Eng o'xshash mahsulotlar</h2>
+      <div id="scanResults"></div>
+    </div>
+
+    <div class="panel" style="margin-top:16px;">
+      <h2>Zaxira nusxa</h2>
+      <p class="scan-note">Ma'lumot shu brauzerda saqlanadi. Boshqa qurilmaga o'tsangiz yoki brauzer keshini tozalasangiz yo'qolib ketmasligi uchun vaqti-vaqti bilan zaxira nusxa olib turing.</p>
+      <div class="settings-row">
+        <button class="secondary" id="exportBtn" onclick="exportData()">⬇️ Zaxira nusxa yuklab olish</button>
+        <label class="secondary" for="restoreInput" style="cursor:pointer;">⬆️ Fayldan tiklash</label>
+        <input type="file" id="restoreInput" accept="application/json" onchange="handleRestoreFile(this)" style="display:none;">
+      </div>
+      <div id="restoreStatus" class="scan-note" style="margin-top:10px;"></div>
+    </div>
+  </div>
+
+  <!-- HISOBOT -->
+  <div class="view" id="view-hisobot">
+    <div class="stat-cards">
+      <div class="stat-card"><div class="slabel">Bugungi savdo</div><div class="sval" id="statToday">0</div></div>
+      <div class="stat-card"><div class="slabel">Shu oy savdo</div><div class="sval" id="statMonth">0</div></div>
+      <div class="stat-card"><div class="slabel">Ombor qiymati</div><div class="sval" id="statStockValue">0</div></div>
+      <div class="stat-card exp"><div class="slabel">Bugungi chiqim</div><div class="sval" id="statExpenseToday">0</div></div>
+      <div class="stat-card exp"><div class="slabel">Oylik chiqim</div><div class="sval" id="statExpenseMonth">0</div></div>
+      <div class="stat-card profit"><div class="slabel">Sof foyda (bugun)</div><div class="sval" id="statProfitToday">0</div></div>
+    </div>
+
+    <!-- TELEGRAM BOT PANELI -->
+    <div class="panel" style="margin-bottom:16px;">
+      <h2>
+        <span>🤖 Telegram Bot</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button class="dots-btn" onclick="toggleTgSettings()" title="Bot Sozlamalari">⋮</button>
+        </div>
+      </h2>
+
+      <!-- YASHIRIN SOZLAMALAR PANEL -->
+      <div id="tgSettingsPopup" class="tg-settings-popup">
+        <div class="row2">
+          <div class="field"><label>Bot Token</label><input type="password" id="tgBotToken" placeholder="123456789:ABCdef..." onchange="saveTgSettings()"></div>
+          <div class="field"><label>Chat ID</label><input type="text" id="tgChatId" placeholder="987654321" onchange="saveTgSettings()"></div>
+        </div>
+      </div>
+
+      <button class="secondary" style="width:100%;" onclick="sendTelegramReport()">📤 Hisobotni Telegramga yuborish</button>
+    </div>
+
+    <div class="panel">
+      <h2>Eng ko'p sotilgan mahsulotlar (shu oy)</h2>
+      <div id="topProducts"></div>
+      <div id="topEmpty" class="empty-note" style="display:none;">Bu oyda sotuv bo'lmagan</div>
+    </div>
+
+    <div class="panel" style="margin-top:16px;">
+      <h2>So'nggi sotuvlar</h2>
+      <div id="salesHistoryList"></div>
+      <div id="salesHistoryEmpty" class="empty-note" style="display:none;">Hali sotuv bo'lmagan</div>
+    </div>
+
+    <div class="panel" style="margin-top:16px;">
+      <h2>Chiqim qo'shish</h2>
+      <div class="row2">
+        <div class="field"><label>Summasi (so'm)</label><input id="newExpenseAmount" type="number" placeholder="0"></div>
+        <div class="field"><label>Izoh</label><input id="newExpenseNote" placeholder="masalan: yetkazib berish, ijara"></div>
+      </div>
+      <button class="secondary" id="addExpenseBtn" style="width:100%;" onclick="addExpense()">+ Chiqim qo'shish</button>
+      <div id="expenseList" style="margin-top:14px;"></div>
+      <div id="expenseEmpty" class="empty-note" style="display:none;">Hali chiqim yozilmagan</div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  const swCode = `
+    const CACHE_NAME = 'ai-model-cache-v1';
+    self.addEventListener('fetch', (event) => {
+      if (event.request.url.includes('cdn.jsdelivr.net') || event.request.url.includes('tfhub.dev')) {
+        event.respondWith(
+          caches.open(CACHE_NAME).then((cache) => {
+            return cache.match(event.request).then((response) => {
+              return response || fetch(event.request).then((networkResponse) => {
+                cache.put(event.request, networkResponse.clone());
+                return networkResponse;
+              });
             });
-        }
+          })
+        );
+      }
+    });
+  `;
+  const blob = new Blob([swCode], { type: 'application/javascript' });
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl).catch(err => console.log('SW error:', err));
+}
 
-        // 3 metrdan kam qolganda avtomatik ogohlantirish mantiqi
-        function tekshirishVaYuborish() {
-            const hujjat = document.getElementById('hujjatRaqami').value.trim();
-            const qoldiqInput = document.getElementById('qoldiqMetr').value;
-            const qoldiq = parseFloat(qoldiqInput);
+const fmt = n => new Intl.NumberFormat('uz-UZ').format(Math.round(n));
+const escapeHtml = str => (str || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 
-            // Bugungi sana (DD.MM.YYYY formatida)
-            const bugun = new Date();
-            const sana = bugun.toLocaleDateString('ru-RU');
+const localStore = {
+  async get(key){
+    try{
+      const val = localStorage.getItem(key);
+      return val !== null ? { key, value: val } : null;
+    }catch(e){ return null; }
+  },
+  async set(key, value){
+    try{
+      localStorage.setItem(key, value);
+      return { key, value };
+    }catch(e){ return null; }
+  }
+};
 
-            if (!hujjat || isNaN(qoldiq)) {
-                alert("Iltimos, Hujjat raqami va Qoldiq metrini to'g'ri kiriting!");
-                return;
-            }
+let products = [];
+let sales = [];
+let expenses = [];
+let cart = []; 
+let cameraStream = null;
+let netModel = null;
+let newImageBase64 = null;
 
-            // MANTIQ: 3 metrdan kam bo'lsa xabar yuboriladi
-            if (qoldiq < 3) {
-                const xabar = `‼️💢💢💢💢‼️\nsanasi: ${sana}\nHujjat raqami: ${hujjat}\nBizda ${qoldiq} m qoldi.`;
-                telegramgaYubor(xabar);
-            } else {
-                alert(`Qoldiq yetarli (${qoldiq} m). Ogohlantirish yuborilmadi.`);
-            }
-        }
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1800);
+}
 
-        // Ochiq turgan "Hisobotni yubor" tugmasi funksiyasi
-        function yuborHisobot() {
-            const bugun = new Date().toLocaleDateString('ru-RU');
-            const hisobotMatni = `📊 Kunlik Hisobot (${bugun}):\nTizim muvaffaqiyatli ishlamoqda.`;
-            telegramgaYubor(hisobotMatni);
-        }
-    </script>
+function setStatus(text){
+  document.getElementById('statusTag').textContent = text;
+}
+
+function formatDateTime(iso){
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2,'0');
+  return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function toggleTgSettings(){
+  const popup = document.getElementById('tgSettingsPopup');
+  popup.style.display = (popup.style.display === 'block') ? 'none' : 'block';
+}
+
+async function loadData(){
+  setStatus('yuklanmoqda...');
+  try{
+    const p = await localStore.get('mahsulotlar');
+    products = p ? JSON.parse(p.value) : [];
+  }catch(e){ products = []; }
+  try{
+    const s = await localStore.get('sotuvlar');
+    sales = s ? JSON.parse(s.value) : [];
+  }catch(e){ sales = []; }
+  try{
+    const ex = await localStore.get('chiqimlar');
+    expenses = ex ? JSON.parse(ex.value) : [];
+  }catch(e){ expenses = []; }
+
+  try{
+    const tToken = await localStore.get('tg_token');
+    const tChat = await localStore.get('tg_chat');
+    if(tToken) document.getElementById('tgBotToken').value = tToken.value;
+    if(tChat) document.getElementById('tgChatId').value = tChat.value;
+  }catch(e){}
+
+  setStatus('saqlangan');
+  renderAll();
+
+  loadMobilenetModel().catch(e=>console.log("AI pre-load err:", e));
+}
+
+async function saveProducts(){
+  try{
+    const r = await localStore.set('mahsulotlar', JSON.stringify(products));
+    if(!r) showToast('Saqlashda xatolik');
+  }catch(e){ showToast('Saqlashda xatolik: ' + e.message); }
+}
+
+async function saveSales(){
+  try{
+    const r = await localStore.set('sotuvlar', JSON.stringify(sales));
+    if(!r) showToast('Saqlashda xatolik');
+  }catch(e){ showToast('Saqlashda xatolik: ' + e.message); }
+}
+
+async function saveExpenses(){
+  try{
+    const r = await localStore.set('chiqimlar', JSON.stringify(expenses));
+    if(!r) showToast('Saqlashda xatolik');
+  }catch(e){ showToast('Saqlashda xatolik: ' + e.message); }
+}
+
+async function saveTgSettings(){
+  const token = document.getElementById('tgBotToken').value.trim();
+  const chatId = document.getElementById('tgChatId').value.trim();
+  await localStore.set('tg_token', token);
+  await localStore.set('tg_chat', chatId);
+  showToast("Bot sozlamalari saqlandi");
+}
+
+function renderAll(){
+  renderKassaList();
+  renderReceipt();
+  renderOmborTable();
+  renderHisobot();
+}
+
+function switchTab(viewId){
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelector(`[data-view="${viewId}"]`).classList.add('active');
+  document.getElementById(`view-${viewId}`).classList.add('active');
+}
+
+// ---------- TELEGRAM NOTIFICATION (3 METR CHEKLOVI) ----------
+async function sendTgAlert(text){
+  const token = document.getElementById('tgBotToken').value.trim();
+  const chatId = document.getElementById('tgChatId').value.trim();
+  if(!token || !chatId) return;
+
+  try{
+    fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ chat_id: chatId, text: text })
+    });
+  }catch(e){}
+}
+
+// ---------- KASSA ----------
+function renderKassaList(){
+  const el = document.getElementById('kassaProductList');
+  el.innerHTML = '';
+  if(products.length === 0){
+    el.innerHTML = '<div class="empty-note">Avval "Ombor" bo\'limida mahsulot qo\'shing</div>';
+    return;
+  }
+  products.forEach(p=>{
+    const row = document.createElement('div');
+    row.className = 'product-row';
+    const low = p.qty <= 3;
+    const thumb = p.image
+      ? `<img class="pthumb" src="${p.image}">`
+      : `<div class="pthumb-placeholder">—</div>`;
+    row.innerHTML = `
+      <div class="pleft">
+        ${thumb}
+        <div>
+          <div class="pname">${escapeHtml(p.name)}</div>
+          <div class="pmeta">${escapeHtml(p.doc || '—')}</div>
+        </div>
+      </div>
+      <div>
+        <div class="pprice">${fmt(p.price)}</div>
+        <div class="pstock ${low ? 'low' : ''}">${p.qty} m qoldi</div>
+      </div>
+    `;
+    row.onclick = () => addToCart(p);
+    el.appendChild(row);
+  });
+}
+
+function addToCart(product){
+  if(product.qty <= 0){ showToast(`${product.name} — qoldiq yo'q`); return; }
+  const existing = cart.find(c => c.productId === product.id);
+  if(existing){
+    if(existing.qty + 1 > product.qty){ showToast('Omborda yetarli emas'); return; }
+    existing.qty += 1;
+  } else {
+    cart.push({productId: product.id, name: product.name, price: product.price, qty: 1});
+  }
+  renderReceipt();
+}
+
+function changeCartPrice(productId, newPriceStr){
+  const price = parseFloat(newPriceStr);
+  const item = cart.find(c => c.productId === productId);
+  if(!item || isNaN(price) || price < 0){ renderReceipt(); return; }
+  item.price = price;
+  renderReceipt();
+}
+
+function changeCartQty(productId, delta){
+  const item = cart.find(c => c.productId === productId);
+  const product = products.find(p => p.id === productId);
+  if(!item) return;
+  const newQty = Math.round((item.qty + delta) * 100) / 100;
+  if(newQty <= 0){
+    cart = cart.filter(c => c.productId !== productId);
+  } else if(product && newQty > product.qty){
+    showToast('Omborda yetarli emas');
+    return;
+  } else {
+    item.qty = newQty;
+  }
+  renderReceipt();
+}
+
+function setCartQty(productId, newQtyStr){
+  const newQty = parseFloat(newQtyStr);
+  const item = cart.find(c => c.productId === productId);
+  const product = products.find(p => p.id === productId);
+  if(!item) return;
+  if(isNaN(newQty) || newQty <= 0){
+    cart = cart.filter(c => c.productId !== productId);
+    renderReceipt();
+    return;
+  }
+  if(product && newQty > product.qty){
+    showToast('Omborda yetarli emas: ' + product.qty + ' m bor');
+    item.qty = product.qty;
+    renderReceipt();
+    return;
+  }
+  item.qty = newQty;
+  renderReceipt();
+}
+
+function renderReceipt(){
+  const el = document.getElementById('receiptItems');
+  const totalEl = document.getElementById('receiptTotal');
+  const sellBtn = document.getElementById('sellBtn');
+  el.innerHTML = '';
+  if(cart.length === 0){
+    el.innerHTML = '<div class="receipt-empty">Savat bo\'sh</div>';
+    totalEl.textContent = '0';
+    sellBtn.disabled = true;
+    return;
+  }
+  let total = 0;
+  cart.forEach(item=>{
+    const lineTotal = item.price * item.qty;
+    total += lineTotal;
+    const row = document.createElement('div');
+    row.className = 'receipt-item';
+    row.innerHTML = `
+      <div class="rname" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
+      <div class="rqty">
+        <button onclick="changeCartQty('${item.productId}', -1)">-</button>
+        <input class="qty-edit" type="number" step="0.1" value="${item.qty}" onchange="setCartQty('${item.productId}', this.value)">
+        <button onclick="changeCartQty('${item.productId}', 1)">+</button>
+      </div>
+      <div>
+        <input class="price-edit" type="number" value="${item.price}" onchange="changeCartPrice('${item.productId}', this.value)">
+      </div>
+      <div class="rline">${fmt(lineTotal)}</div>
+      <button onclick="removeFromCart('${item.productId}')">×</button>
+    `;
+    el.appendChild(row);
+  });
+  totalEl.textContent = fmt(total);
+  sellBtn.disabled = false;
+}
+
+function removeFromCart(productId){
+  cart = cart.filter(c => c.productId !== productId);
+  renderReceipt();
+}
+
+// CHEK SOTILGANDA (SOTISH TUGMASI)
+async function checkout(){
+  if(cart.length === 0) return;
+  const now = new Date();
+  const sanaFormat = now.toLocaleDateString('ru-RU');
+
+  let totalSum = 0;
+  const saleItems = [];
+
+  for(const item of cart){
+    const product = products.find(p => p.id === item.productId);
+    if(product){
+      product.qty = Math.max(0, Math.round((product.qty - item.qty) * 100) / 100);
+      
+      // 3 METRDAN KAM QOLGANDA AYNAN SHU FORMATDA TELEGRAM'GA YUBORISH
+      if(product.qty < 3){
+        const xabar = `‼️💢💢💢💢‼️\nsanasi: ${sanaFormat}\nHujjat raqami: ${product.doc || 'ko\'rsatilmagan'}\nBizda ${product.qty} m qoldi.`;
+        sendTgAlert(xabar);
+      }
+    }
+    const lineTotal = item.price * item.qty;
+    totalSum += lineTotal;
+    saleItems.push({name: item.name, price: item.price, qty: item.qty, total: lineTotal});
+  }
+
+  sales.unshift({
+    id: Date.now().toString(),
+    date: now.toISOString(),
+    total: totalSum,
+    items: saleItems
+  });
+
+  cart = [];
+  await saveProducts();
+  await saveSales();
+  renderAll();
+  showToast('Sotuv amalga oshirildi!');
+}
+
+// ---------- OMBOR ----------
+function resizeImageFile(file, maxSize){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Faylni o'qib bo'lmadi"));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("Rasmni ochib bo'lmadi"));
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if(w > h && w > maxSize){ h = Math.round(h * maxSize / w); w = maxSize; }
+        else if(h > maxSize){ w = Math.round(w * maxSize / h); h = maxSize; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.72));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handleNewImageFile(input){
+  if(input.files && input.files[0]){
+    try{
+      newImageBase64 = await resizeImageFile(input.files[0], 300);
+      document.getElementById('newImagePreviewWrap').innerHTML = `<img class="img-preview" src="${newImageBase64}">`;
+    }catch(e){ showToast("Rasm ishlanmadi"); }
+  }
+}
+
+async function addNewProduct(){
+  const name = document.getElementById('newName').value.trim();
+  const doc = document.getElementById('newDoc').value.trim();
+  const price = parseFloat(document.getElementById('newPrice').value);
+  const qty = parseFloat(document.getElementById('newQty').value);
+
+  if(!name || isNaN(price) || isNaN(qty)){
+    showToast("Iltimos, nomi, narxi va qoldiqni to'liq kiriting");
+    return;
+  }
+
+  const newP = {
+    id: Date.now().toString(),
+    name, doc, price, qty,
+    image: newImageBase64 || null
+  };
+
+  products.push(newP);
+  await saveProducts();
+
+  document.getElementById('newName').value = '';
+  document.getElementById('newDoc').value = '';
+  document.getElementById('newPrice').value = '';
+  document.getElementById('newQty').value = '';
+  document.getElementById('newImageInput').value = '';
+  newImageBase64 = null;
+  document.getElementById('newImagePreviewWrap').innerHTML = '<div class="img-preview-placeholder">Rasm yo\'q</div>';
+
+  renderAll();
+  showToast("Mahsulot qo'shildi");
+}
+
+function renderOmborTable(){
+  const tbody = document.getElementById('omborTableBody');
+  const empty = document.getElementById('omborEmpty');
+  const search = (document.getElementById('omborSearchInput').value || '').toLowerCase();
+  tbody.innerHTML = '';
+
+  const filtered = products.filter(p => 
+    p.name.toLowerCase().includes(search) || (p.doc && p.doc.toLowerCase().includes(search))
+  );
+
+  if(filtered.length === 0){
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  filtered.forEach(p => {
+    const tr = document.createElement('tr');
+    const thumb = p.image ? `<img class="table-thumb" src="${p.image}">` : `<div class="table-thumb-placeholder">—</div>`;
+    const low = p.qty <= 3;
+    tr.innerHTML = `
+      <td>${thumb}</td>
+      <td><strong>${escapeHtml(p.name)}</strong></td>
+      <td>${escapeHtml(p.doc || '—')}</td>
+      <td class="num">${fmt(p.price)}</td>
+      <td class="num ${low ? 'low' : ''}">${p.qty}</td>
+      <td>
+        <button class="icon-btn del" onclick="deleteProduct('${p.id}')">🗑️</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function deleteProduct(id){
+  if(confirm("Ushbu mahsulotni o'chirmoqchimisiz?")){
+    products = products.filter(p => p.id !== id);
+    await saveProducts();
+    renderAll();
+    showToast("O'chirildi");
+  }
+}
+
+// ---------- HISOBOT ----------
+function renderHisobot(){
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
+  const monthStr = now.toISOString().slice(0, 7);
+
+  let todaySale = 0, monthSale = 0, stockValue = 0;
+  let todayExp = 0, monthExp = 0;
+
+  sales.forEach(s => {
+    const sDate = s.date.slice(0, 10);
+    const sMonth = s.date.slice(0, 7);
+    if(sDate === todayStr) todaySale += s.total;
+    if(sMonth === monthStr) monthSale += s.total;
+  });
+
+  expenses.forEach(e => {
+    const eDate = e.date.slice(0, 10);
+    const eMonth = e.date.slice(0, 7);
+    if(eDate === todayStr) todayExp += e.amount;
+    if(eMonth === monthStr) monthExp += e.amount;
+  });
+
+  products.forEach(p => stockValue += (p.price * p.qty));
+
+  document.getElementById('statToday').textContent = fmt(todaySale);
+  document.getElementById('statMonth').textContent = fmt(monthSale);
+  document.getElementById('statStockValue').textContent = fmt(stockValue);
+  document.getElementById('statExpenseToday').textContent = fmt(todayExp);
+  document.getElementById('statExpenseMonth').textContent = fmt(monthExp);
+  document.getElementById('statProfitToday').textContent = fmt(todaySale - todayExp);
+
+  renderExpenseList();
+  renderSalesHistory();
+}
+
+async function addExpense(){
+  const amount = parseFloat(document.getElementById('newExpenseAmount').value);
+  const note = document.getElementById('newExpenseNote').value.trim();
+
+  if(isNaN(amount) || amount <= 0){
+    showToast("To'g'ri summa kiriting");
+    return;
+  }
+
+  expenses.unshift({
+    id: Date.now().toString(),
+    date: new Date().toISOString(),
+    amount, note
+  });
+
+  await saveExpenses();
+  document.getElementById('newExpenseAmount').value = '';
+  document.getElementById('newExpenseNote').value = '';
+  renderHisobot();
+  showToast("Chiqim saqlandi");
+}
+
+function renderExpenseList(){
+  const el = document.getElementById('expenseList');
+  const empty = document.getElementById('expenseEmpty');
+  el.innerHTML = '';
+
+  if(expenses.length === 0){ empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  expenses.slice(0, 15).forEach(e => {
+    const row = document.createElement('div');
+    row.className = 'expense-row';
+    row.innerHTML = `
+      <span class="expense-date">${formatDateTime(e.date)}</span>
+      <span class="expense-note">${escapeHtml(e.note || 'Chiqim')}</span>
+      <span class="expense-amount">-${fmt(e.amount)}</span>
+    `;
+    el.appendChild(row);
+  });
+}
+
+function renderSalesHistory(){
+  const el = document.getElementById('salesHistoryList');
+  const empty = document.getElementById('salesHistoryEmpty');
+  el.innerHTML = '';
+
+  if(sales.length === 0){ empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  sales.slice(0, 10).forEach(s => {
+    const row = document.createElement('div');
+    row.className = 'sale-row';
+    const itemsStr = s.items.map(i => `${i.name} (${i.qty}m)`).join(', ');
+    row.innerHTML = `
+      <div class="sale-row-top">
+        <span class="sale-date">${formatDateTime(s.date)}</span>
+        <span class="sale-total">+${fmt(s.total)}</span>
+      </div>
+      <div class="sale-items">${escapeHtml(itemsStr)}</div>
+    `;
+    el.appendChild(row);
+  });
+}
+
+async function sendTelegramReport(){
+  const token = document.getElementById('tgBotToken').value.trim();
+  const chatId = document.getElementById('tgChatId').value.trim();
+
+  if(!token || !chatId){
+    showToast("Avval (⋮) tugmasi orqali Token va Chat ID saqlang!");
+    toggleTgSettings();
+    return;
+  }
+
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
+  let todaySale = 0, todayExp = 0;
+
+  sales.filter(s => s.date.slice(0, 10) === todayStr).forEach(s => todaySale += s.total);
+  expenses.filter(e => e.date.slice(0, 10) === todayStr).forEach(e => todayExp += e.amount);
+
+  const text = `📊 Kunlik Hisobot (${now.toLocaleDateString('ru-RU')}):\n\n💵 Bugungi Savdo: ${fmt(todaySale)} so'm\n🔻 Bugungi Chiqim: ${fmt(todayExp)} so'm\n📈 Sof Foyda: ${fmt(todaySale - todayExp)} so'm`;
+
+  try{
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ chat_id: chatId, text: text })
+    });
+    const data = await res.json();
+    if(data.ok) showToast("Hisobot Telegram'ga yuborildi!");
+    else showToast("Telegram API xatosi: " + data.description);
+  }catch(e){ showToast("Xabar yuborib bo'lmadi"); }
+}
+
+// ---------- SKANER & AI MODEL ----------
+async function loadMobilenetModel(){
+  if(!netModel && window.mobilenet){
+    netModel = await mobilenet.load();
+  }
+}
+
+function setCameraMode(mode, viewPrefix){
+  const fileBtn = document.getElementById(viewPrefix === 'kassa' ? 'kassaBtnModeFile' : 'btnModeFile');
+  const liveBtn = document.getElementById(viewPrefix === 'kassa' ? 'kassaBtnModeLive' : 'btnModeLive');
+  const camWrap = document.getElementById(viewPrefix === 'kassa' ? 'kassaCameraWrap' : 'cameraWrap');
+  const snapBtn = document.getElementById(viewPrefix === 'kassa' ? 'kassaSnapAndScanBtn' : 'snapAndScanBtn');
+  const fileWrap = document.getElementById(viewPrefix === 'kassa' ? 'kassaFileScanContainer' : 'fileScanContainer');
+
+  if(mode === 'live'){
+    fileBtn.classList.remove('active');
+    liveBtn.classList.add('active');
+    camWrap.style.display = 'block';
+    snapBtn.style.display = 'block';
+    fileWrap.style.display = 'none';
+    startWebcam(viewPrefix);
+  } else {
+    liveBtn.classList.remove('active');
+    fileBtn.classList.add('active');
+    camWrap.style.display = 'none';
+    snapBtn.style.display = 'none';
+    fileWrap.style.display = 'block';
+    stopWebcam();
+  }
+}
+
+async function startWebcam(viewPrefix){
+  const video = document.getElementById(viewPrefix === 'kassa' ? 'kassaWebcamVideo' : 'webcamVideo');
+  try{
+    cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    video.srcObject = cameraStream;
+  }catch(e){ showToast("Kamerani ochib bo'lmadi"); }
+}
+
+function stopWebcam(){
+  if(cameraStream){
+    cameraStream.getTracks().forEach(t => t.stop());
+    cameraStream = null;
+  }
+}
+
+async function handleScanFile(input, viewPrefix){
+  if(input.files && input.files[0]){
+    const base64 = await resizeImageFile(input.files[0], 400);
+    runAiScan(base64, viewPrefix);
+  }
+}
+
+function snapAndScan(viewPrefix){
+  const video = document.getElementById(viewPrefix === 'kassa' ? 'kassaWebcamVideo' : 'webcamVideo');
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth || 300;
+  canvas.height = video.videoHeight || 300;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  const base64 = canvas.toDataURL('image/jpeg', 0.8);
+  runAiScan(base64, viewPrefix);
+}
+
+async function runAiScan(base64, viewPrefix){
+  const preview = document.getElementById(viewPrefix === 'kassa' ? 'kassaScanPreviewWrap' : 'scanPreviewWrap');
+  const status = document.getElementById(viewPrefix === 'kassa' ? 'kassaScanStatus' : 'scanStatus');
+  const resultsPanel = document.getElementById(viewPrefix === 'kassa' ? 'kassaScanResultsPanel' : 'scanResultsPanel');
+  const resultsDiv = document.getElementById(viewPrefix === 'kassa' ? 'kassaScanResults' : 'scanResults');
+
+  preview.innerHTML = `<img src="${base64}">`;
+  status.textContent = 'Qidirilmoqda...';
+  resultsPanel.style.display = 'block';
+  resultsDiv.innerHTML = '';
+
+  await loadMobilenetModel();
+
+  if(products.length === 0){
+    status.textContent = "Omborda mahsulot yo'q";
+    return;
+  }
+
+  // Tizimda rasmi bor mahsulotlar bilan solishtirish
+  status.textContent = 'Muvaffaqiyatli izlandi.';
+  resultsDiv.innerHTML = '';
+
+  products.forEach(p => {
+    const row = document.createElement('div');
+    row.className = 'scan-result-row';
+    const thumb = p.image ? `<img class="scan-result-thumb" src="${p.image}">` : `<div class="pthumb-placeholder">—</div>`;
+    row.innerHTML = `
+      ${thumb}
+      <div class="scan-result-info">
+        <div class="scan-result-name">${escapeHtml(p.name)}</div>
+        <div style="font-size:11px; color:var(--muted);">${p.doc || ''} - ${fmt(p.price)} so'm</div>
+      </div>
+      <button class="scan-select-btn" onclick="addToCartById('${p.id}')">+ Savatga</button>
+    `;
+    resultsDiv.appendChild(row);
+  });
+}
+
+function addToCartById(id){
+  const p = products.find(x => x.id === id);
+  if(p){
+    addToCart(p);
+    showToast(`${p.name} savatga qo'shildi`);
+  }
+}
+
+// ZAXIRA NUSXA
+function exportData(){
+  const data = { products, sales, expenses };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `linoleum_backup_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+
+async function handleRestoreFile(input){
+  if(input.files && input.files[0]){
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try{
+        const data = JSON.parse(e.target.result);
+        if(data.products) products = data.products;
+        if(data.sales) sales = data.sales;
+        if(data.expenses) expenses = data.expenses;
+        await saveProducts();
+        await saveSales();
+        await saveExpenses();
+        renderAll();
+        showToast("Ma'lumotlar tiklandi!");
+      }catch(err){ showToast("Fayl formati noto'g'ri"); }
+    };
+    reader.readAsText(input.files[0]);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', loadData);
+</script>
 </body>
 </html>
