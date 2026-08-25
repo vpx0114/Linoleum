@@ -237,8 +237,6 @@
   }
   .toast.show{opacity:1;}
 </style>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
 </head>
 <body>
 <div class="app">
@@ -330,14 +328,8 @@
   <!-- SKANER -->
   <div class="view" id="view-skaner">
     <div class="panel">
-      <h2>Sozlama — Local AI</h2>
-      <p class="scan-note">Skaner internetdagi API'ga so'rov yubormaydi. AI model brauzerning o'zida ishlaydi va mahsulot rasmlarini lokal ravishda solishtiradi. Birinchi marta modelni yuklash uchun internet kerak bo'ladi, keyingi ishlash model brauzer keshida saqlangan bo'lsa lokal davom etadi.</p>
-      <div id="apiKeyStatus" class="scan-note" style="margin-top:8px;">Model holati: yuklanmoqda...</div>
-    </div>
-
-    <div class="panel" style="margin-top:16px;">
-      <h2>Linoleumni skanerlash</h2>
-      <p class="scan-note">Kamerani namunaga qarating va suratga oling — ombordagi <strong>rasmi biriktirilgan</strong> mahsulotlar bilan Local AI yordamida solishtirilib, eng o'xshash 5 tasi ko'rsatiladi.</p>
+      <h2>Linoleumni skanerlash (Local AI)</h2>
+      <p class="scan-note">Kamerani namunaga qarating va suratga oling — ombordagi <strong>rasmi biriktirilgan</strong> mahsulotlar bilan solishtirilib, eng o'xshash 5 tasi ko'rsatiladi. Solishtirish butunlay shu qurilmada, brauzerda ishlaydi — hech qanday rasm tashqariga (internetga, API'ga) yuborilmaydi, API kalit shart emas, pul sarflanmaydi. Birinchi skanerlashda AI modeli (~5-10 MB) bir marta yuklab olinadi, keyin tezroq ishlaydi. Aniqlik taxminiy — kod/QR usuliga qaraganda kamroq ishonchli.</p>
       <label class="scan-upload-btn" for="scanInput">📷 Suratga olish / rasm tanlash</label>
       <input type="file" id="scanInput" accept="image/*" capture="environment" onchange="handleScanFile(this,'skaner')" style="display:none;">
       <div class="scan-preview" id="scanPreviewWrap"></div>
@@ -397,6 +389,8 @@
 </div>
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
 <script>
 const fmt = n => new Intl.NumberFormat('uz-UZ').format(Math.round(n));
 
@@ -838,97 +832,70 @@ function renderOmborTable(){
   });
 }
 
-// ---------- LOCAL AI SKANER ----------
-let localVisionModel = null;
-let localVisionLoading = null;
-const localEmbeddingCache = new Map();
+// ---------- LOCAL AI (MobileNet, brauzerda ishlaydi, tashqi API/kalit shart emas) ----------
+let mobilenetModel = null;
+let mobilenetLoadPromise = null;
 
-function getApiKey(){ return ''; }
-function saveApiKey(){ return true; }
-
-async function loadLocalVisionModel(){
-  if(localVisionModel) return localVisionModel;
-  if(localVisionLoading) return localVisionLoading;
-
-  const statusEl = document.getElementById('apiKeyStatus');
-  const setStatus = msg => {
-    if(statusEl) statusEl.textContent = msg;
-  };
-
-  localVisionLoading = (async()=>{
-    try{
-      setStatus('Model holati: TensorFlow yuklanmoqda...');
-
-      if(typeof tf === 'undefined'){
-        throw new Error('TensorFlow yuklanmadi. Internet/CDN ulanishini tekshiring.');
-      }
-
-      await tf.ready();
-      setStatus('Model holati: TensorFlow tayyor ✓');
-
-      if(typeof mobilenet === 'undefined'){
-        throw new Error('MobileNet kutubxonasi yuklanmadi. Internet/CDN ulanishini tekshiring.');
-      }
-
-      setStatus('Model holati: AI modeli yuklanmoqda...');
-
-      // Do not leave the UI stuck forever if the CDN/model request hangs.
-      const model = await Promise.race([
-        mobilenet.load({version: 2, alpha: 1.0}),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Model 60 soniyada yuklanmadi. Internetni tekshiring va sahifani qayta yuklang.')), 60000)
-        )
-      ]);
-
-      if(!model || typeof model.infer !== 'function'){
-        throw new Error('AI modeli yuklandi, lekin ishlashga tayyor emas.');
-      }
-
-      localVisionModel = model;
-      setStatus('Model holati: tayyor ✓');
-      return localVisionModel;
-    }catch(e){
-      console.error('Local AI:', e);
-      setStatus('Model holati: XATO — ' + (e.message || e) + ' | Qayta urinish uchun sahifani yangilang.');
-      throw e;
-    }
-  })();
-
-  try{
-    return await localVisionLoading;
-  }finally{
-    localVisionLoading = null;
-  }
+function loadMobilenetModel(){
+  if(mobilenetModel) return Promise.resolve(mobilenetModel);
+  if(mobilenetLoadPromise) return mobilenetLoadPromise;
+  mobilenetLoadPromise = mobilenet.load({ version: 2, alpha: 1.0 }).then(m=>{
+    mobilenetModel = m;
+    return m;
+  }).catch(e=>{
+    mobilenetLoadPromise = null; // keyingi urinishda qayta yuklab ko'rish uchun
+    throw e;
+  });
+  return mobilenetLoadPromise;
 }
 
-function imageElementFromDataUrl(dataUrl){
+function loadImageEl(dataUrl){
   return new Promise((resolve, reject)=>{
     const img = new Image();
-    img.onload = ()=>resolve(img);
-    img.onerror = ()=>reject(new Error('Rasmni o\'qib bo\'lmadi'));
+    img.onload = ()=> resolve(img);
+    img.onerror = ()=> reject(new Error("Rasmni o'qib bo'lmadi"));
     img.src = dataUrl;
   });
 }
 
-async function getImageEmbedding(dataUrl){
-  const model = await loadLocalVisionModel();
-  const img = await imageElementFromDataUrl(dataUrl);
-  const embeddingTensor = model.infer(img, true);
+// Rasmning "AI xususiyat vektori"ni chiqarish — hammasi brauzerning o'zida, hech narsa serverga yuborilmaydi
+async function extractEmbedding(dataUrl){
+  const model = await loadMobilenetModel();
+  const img = await loadImageEl(dataUrl);
+  const embeddingTensor = tf.tidy(()=> model.infer(img, true));
   const values = await embeddingTensor.data();
-  const arr = Array.from(values);
   embeddingTensor.dispose();
-  let norm = 0;
-  for(const v of arr) norm += v*v;
-  norm = Math.sqrt(norm) || 1;
-  return arr.map(v => v / norm);
+  return Array.from(values);
 }
 
-function cosineSimilarity(a,b){
-  let sum = 0;
-  const n = Math.min(a.length,b.length);
-  for(let i=0;i<n;i++) sum += a[i]*b[i];
-  return Math.max(0, Math.min(1, sum));
+function cosineSimilarity(a, b){
+  let dot = 0, normA = 0, normB = 0;
+  for(let i = 0; i < a.length; i++){
+    dot += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+  return dot / (Math.sqrt(normA) * Math.sqrt(normB) + 1e-8);
 }
+
+// Har bir mahsulot rasmi uchun embedding keshi — rasm o'zgarmagan ekan, qayta hisoblanmaydi
+const productEmbeddingCache = {};
+
+async function getProductEmbedding(product){
+  const cached = productEmbeddingCache[product.id];
+  if(cached && cached.image === product.image){
+    return cached.embedding;
+  }
+  const embedding = await extractEmbedding(product.image);
+  productEmbeddingCache[product.id] = { image: product.image, embedding };
+  return embedding;
+}
+
+// ---------- SKANER ----------
+const SCAN_CTX = {
+  skaner: { preview: 'scanPreviewWrap', status: 'scanStatus', resultsPanel: 'scanResultsPanel', results: 'scanResults' },
+  kassa:  { preview: 'kassaScanPreviewWrap', status: 'kassaScanStatus', resultsPanel: 'kassaScanResultsPanel', results: 'kassaScanResults' }
+};
 
 async function handleScanFile(input, context){
   const file = input.files && input.files[0];
@@ -950,40 +917,44 @@ async function handleScanFile(input, context){
 async function performScan(scannedImageData, context){
   const c = SCAN_CTX[context];
   const statusEl = document.getElementById(c.status);
+
   const withImages = products.filter(p => p.image);
   if(withImages.length === 0){
     statusEl.textContent = "Hech qaysi mahsulotda rasm yo'q — avval Ombor bo'limida mahsulotlarga rasm qo'shing.";
     return;
   }
 
+  statusEl.textContent = mobilenetModel ? 'Solishtirilmoqda...' : "AI modeli yuklanmoqda (birinchi marta biroz vaqt oladi)...";
+
   try{
-    await loadLocalVisionModel();
-    statusEl.textContent = `AI analiz qilmoqda... (0/${withImages.length})`;
-    const queryEmbedding = await getImageEmbedding(scannedImageData);
-    const matches = [];
-
-    for(let i=0;i<withImages.length;i++){
-      const p = withImages[i];
-      let embedding = localEmbeddingCache.get(p.id);
-      if(!embedding){
-        embedding = await getImageEmbedding(p.image);
-        localEmbeddingCache.set(p.id, embedding);
-      }
-      const similarity = cosineSimilarity(queryEmbedding, embedding);
-      matches.push({
-        id: p.id,
-        score: Math.round(similarity * 100),
-        reason: 'Rang, shakl va umumiy vizual o‘xshashlik bo‘yicha'
-      });
-      statusEl.textContent = `AI analiz qilmoqda... (${i+1}/${withImages.length})`;
-      await new Promise(requestAnimationFrame);
-    }
-
-    matches.sort((a,b)=>b.score-a.score);
-    renderScanResults(matches.slice(0,5), context);
-    statusEl.textContent = 'Local AI tahlili tugadi ✓';
+    await loadMobilenetModel();
   }catch(e){
-    statusEl.textContent = 'Local AI xatolik: ' + e.message;
+    console.error('Mobilenet load error:', e);
+    const isFileProtocol = location.protocol === 'file:';
+    if(isFileProtocol){
+      statusEl.textContent = "AI modelni yuklab bo'lmadi: fayl to'g'ridan-to'g'ri (file://) ochilgan. Sahifani veb-server orqali (GitHub Pages yoki lokal server) oching.";
+    } else {
+      statusEl.textContent = "AI modelni yuklab bo'lmadi: " + (e && e.message ? e.message : 'nomaʼlum xatolik') + ". Brauzer konsolini (F12) tekshiring.";
+    }
+    return;
+  }
+
+  statusEl.textContent = `Solishtirilmoqda... (${withImages.length} ta mahsulot bilan)`;
+
+  try{
+    const scanEmbedding = await extractEmbedding(scannedImageData);
+
+    const scored = [];
+    for(const p of withImages){
+      const embedding = await getProductEmbedding(p);
+      const sim = cosineSimilarity(scanEmbedding, embedding);
+      scored.push({ id: p.id, score: Math.max(0, Math.min(100, Math.round(sim * 100))) });
+    }
+    scored.sort((a, b)=> b.score - a.score);
+    renderScanResults(scored.slice(0, 5), context);
+    statusEl.textContent = '';
+  }catch(e){
+    statusEl.textContent = 'Xatolik: ' + e.message;
   }
 }
 
@@ -1009,7 +980,6 @@ function renderScanResults(matches, context){
       <img class="scan-result-thumb" src="${product.image}">
       <div class="scan-result-info">
         <div class="scan-result-name">${escapeHtml(product.name)}</div>
-        <div class="scan-result-reason">${escapeHtml(m.reason || '')}</div>
         <div class="scan-score-track"><div class="scan-score-fill" style="width:${score}%"></div></div>
       </div>
       <div class="scan-score-pct">${score}%</div>
@@ -1248,70 +1218,14 @@ document.getElementById('addProductBtn').addEventListener('click', addProduct);
 document.getElementById('addExpenseBtn').addEventListener('click', addExpense);
 document.getElementById('exportBtn').addEventListener('click', exportBackup);
 
+if(location.protocol === 'file:'){
+  const scanStatusEl = document.getElementById('scanStatus');
+  if(scanStatusEl){
+    scanStatusEl.textContent = "Diqqat: bu fayl to'g'ridan-to'g'ri (file://) ochilgan — AI skaner ishlamasligi mumkin. Sahifani GitHub Pages yoki lokal server orqali oching.";
+  }
+}
+
 loadData();
 </script>
-
-<script>
-(function(){
-  function status(text, ok){
-    var el = document.getElementById('localAiStatus');
-    if(!el){
-      el = document.createElement('div');
-      el.id = 'localAiStatus';
-      el.style.cssText = 'position:fixed;left:16px;bottom:16px;z-index:99999;padding:10px 14px;border-radius:10px;background:#111;color:#fff;font:14px Arial;max-width:520px;box-shadow:0 4px 18px rgba(0,0,0,.25)';
-      document.body.appendChild(el);
-    }
-    el.textContent = text;
-    el.style.background = ok ? '#176b3a' : '#8a1f1f';
-  }
-
-  window.localAiReady = false;
-  window.localAiModel = null;
-
-  async function startLocalAI(){
-    try{
-      status('Local AI: kutubxonalar tekshirilmoqda…');
-
-      if(typeof window.tf === 'undefined'){
-        throw new Error('TensorFlow.js yuklanmagan. Internet/CDN bloklangan bo‘lishi mumkin.');
-      }
-
-      await window.tf.ready();
-      status('Local AI: TensorFlow tayyor. Model yuklanmoqda…');
-
-      if(typeof window.mobilenet === 'undefined'){
-        throw new Error('MobileNet kutubxonasi yuklanmagan. Internet/CDN bloklangan bo‘lishi mumkin.');
-      }
-
-      var model = await window.mobilenet.load({version: 2, alpha: 1.0});
-
-      if(!model || typeof model.infer !== 'function'){
-        throw new Error('Model yuklandi, lekin infer() mavjud emas.');
-      }
-
-      window.localAiModel = model;
-      window.localAiReady = true;
-      status('Local AI: TAYYOR ✓', true);
-
-      // If the original app has a model status element, update it too.
-      var old = document.getElementById('apiKeyStatus');
-      if(old) old.textContent = 'Model holati: Tayyor ✓';
-
-    }catch(err){
-      console.error('LOCAL AI ERROR:', err);
-      status('Local AI XATO: ' + (err && err.message ? err.message : err));
-      var old = document.getElementById('apiKeyStatus');
-      if(old) old.textContent = 'Model holati: XATO — ' + (err && err.message ? err.message : err);
-    }
-  }
-
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', startLocalAI, {once:true});
-  }else{
-    startLocalAI();
-  }
-})();
-</script>
-
 </body>
 </html>
