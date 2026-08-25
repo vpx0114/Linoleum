@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="uz">
 <head>
@@ -31,7 +30,7 @@
     font-family:var(--sans); min-height:100vh;
   }
   .app{max-width:1040px; margin:0 auto; padding:22px 16px 70px;}
- 
+
   header{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;}
   header .brand{display:flex; align-items:center; gap:10px;}
   header .logo{
@@ -41,7 +40,7 @@
   header h1{font-size:19px; font-weight:700; letter-spacing:0.2px; margin:0; line-height:1.2;}
   header .sub{font-size:11px; color:var(--muted); margin-top:1px;}
   header .tag{font-family:var(--mono); font-size:10.5px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; background:var(--surface); border:1px solid var(--line); padding:5px 10px; border-radius:20px;}
- 
+
   nav{
     display:flex; gap:4px; background:var(--surface); border:1px solid var(--line);
     border-radius:12px; padding:4px; margin-bottom:20px; overflow-x:auto;
@@ -53,19 +52,19 @@
   }
   nav button.active{background:var(--accent); color:#1c1a17;}
   nav button:hover:not(.active){color:var(--text); background:var(--surface-2);}
- 
+
   .view{display:none; animation:fadeIn .18s ease;}
   .view.active{display:block;}
   @keyframes fadeIn{ from{opacity:0; transform:translateY(3px);} to{opacity:1; transform:translateY(0);} }
- 
+
   .grid{display:grid; grid-template-columns:1.3fr 1fr; gap:16px;}
   @media (max-width:720px){ .grid{grid-template-columns:1fr;} }
- 
+
   .panel{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px; box-shadow:var(--shadow);}
   .panel h2{font-size:12.5px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin:0 0 12px; display:flex; align-items:center; gap:6px;}
   .panel-head-row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;}
   .panel-head-row h2{margin:0;}
- 
+
   .product-row{
     display:flex; align-items:center; justify-content:space-between;
     padding:10px 8px; border-radius:8px; cursor:pointer; gap:10px; transition:background .12s;
@@ -87,7 +86,7 @@
   .product-row .pprice{font-family:var(--mono); font-size:14px; color:var(--accent); text-align:right;}
   .product-row .pstock{font-size:11px; color:var(--muted); text-align:right;}
   .low{color:var(--danger) !important; font-weight:700;}
- 
+
   .receipt{
     background:var(--surface);
     border:1px dashed var(--line); border-radius:12px; padding:16px;
@@ -113,14 +112,14 @@
   }
   .receipt-item input.qty-edit:focus{outline:none; border-color:var(--accent);}
   .receipt-empty{color:var(--muted); font-size:12.5px; text-align:center; padding:34px 0; font-family:var(--mono);}
- 
+
   .receipt-total{
     display:flex; justify-content:space-between; align-items:baseline;
     border-top:1px solid var(--line); padding-top:12px; margin-bottom:12px;
   }
   .receipt-total .label{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:1px;}
   .receipt-total .value{font-family:var(--mono); font-size:27px; font-weight:700; color:var(--accent);}
- 
+
   button.primary{
     background:var(--accent); color:#1c1a17; border:none; border-radius:9px;
     padding:12px; font-weight:700; font-size:14px; cursor:pointer; width:100%;
@@ -133,7 +132,7 @@
     padding:10px 14px; font-weight:600; font-size:13px; cursor:pointer; transition:border-color .12s;
   }
   button.secondary:hover{border-color:var(--accent);}
- 
+
   input, select{
     background:var(--bg); border:1px solid var(--line); color:var(--text);
     border-radius:7px; padding:9px 10px; font-family:var(--sans); font-size:13px; width:100%;
@@ -142,7 +141,7 @@
   label{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:4px;}
   .field{margin-bottom:10px;}
   .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
- 
+
   table{width:100%; border-collapse:collapse; font-size:13px;}
   th{text-align:left; color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:0.5px; padding:8px 6px; border-bottom:1px solid var(--line);}
   td{padding:9px 6px; border-bottom:1px solid var(--line);}
@@ -168,7 +167,7 @@
     width:56px; height:56px; border-radius:9px; background:var(--surface-2); border:1px dashed var(--line);
     display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:11px; flex-shrink:0; text-align:center;
   }
- 
+
   .stat-cards{display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:18px;}
   .stat-card{background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:11px; padding:14px 16px; box-shadow:var(--shadow);}
   .stat-card.exp{border-left-color:var(--danger);}
@@ -177,7 +176,7 @@
   .stat-card .sval{font-family:var(--mono); font-size:22px; font-weight:700; color:var(--accent); margin-top:6px;}
   .stat-card.exp .sval{color:var(--danger);}
   .stat-card.profit .sval{color:var(--success);}
- 
+
   .expense-row{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
     padding:9px 6px; border-bottom:1px solid var(--line); font-size:13px;
@@ -186,22 +185,22 @@
   .expense-date{font-family:var(--mono); font-size:11px; color:var(--muted); width:76px; flex-shrink:0;}
   .expense-note{flex:1; color:var(--text); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .expense-amount{font-family:var(--mono); color:var(--danger); font-weight:600; white-space:nowrap;}
- 
+
   .sale-row{padding:10px 6px; border-bottom:1px solid var(--line);}
   .sale-row:last-child{border-bottom:none;}
   .sale-row-top{display:flex; justify-content:space-between; align-items:baseline; gap:10px;}
   .sale-date{font-family:var(--mono); font-size:11px; color:var(--muted);}
   .sale-total{font-family:var(--mono); font-weight:700; color:var(--accent); font-size:14px;}
   .sale-items{font-size:11.5px; color:var(--muted); margin-top:3px; line-height:1.5;}
- 
+
   .bar-row{display:flex; align-items:center; gap:10px; margin-bottom:8px;}
   .bar-name{width:120px; font-size:12px; color:var(--text); flex-shrink:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .bar-track{flex:1; background:var(--surface-2); border-radius:4px; height:16px; overflow:hidden;}
   .bar-fill{background:var(--accent); height:100%;}
   .bar-val{font-family:var(--mono); font-size:11px; color:var(--muted); width:70px; text-align:right;}
- 
+
   .empty-note{color:var(--muted); font-size:13px; text-align:center; padding:22px;}
- 
+
   .scan-note{color:var(--muted); font-size:12.5px; line-height:1.6; margin:0 0 14px;}
   .scan-upload-btn{
     display:inline-block; background:var(--accent); color:#1c1a17; border-radius:9px;
@@ -227,9 +226,9 @@
     border-radius:7px; padding:6px 10px; font-size:11.5px; font-weight:600; cursor:pointer; white-space:nowrap; flex-shrink:0;
   }
   .scan-select-btn:hover{border-color:var(--accent);}
- 
+
   .settings-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;}
- 
+
   .toast{
     position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
     background:var(--surface-2); border:1px solid var(--accent); color:var(--text);
@@ -251,14 +250,14 @@
     </div>
     <span class="tag" id="statusTag">yuklanmoqda...</span>
   </header>
- 
+
   <nav>
     <button class="tab-btn active" data-view="kassa">💵 Kassa</button>
     <button class="tab-btn" data-view="ombor">📦 Ombor</button>
     <button class="tab-btn" data-view="skaner">📷 Skaner</button>
     <button class="tab-btn" data-view="hisobot">📊 Hisobot</button>
   </nav>
- 
+
   <!-- KASSA -->
   <div class="view active" id="view-kassa">
     <div class="grid">
@@ -278,7 +277,7 @@
         <button class="primary" id="sellBtn" disabled>Sotish</button>
       </div>
     </div>
- 
+
     <div class="panel" style="margin-top:16px;">
       <div class="panel-head-row">
         <h2>Tez skanerlash</h2>
@@ -292,7 +291,7 @@
       </div>
     </div>
   </div>
- 
+
   <!-- OMBOR -->
   <div class="view" id="view-ombor">
     <div class="panel">
@@ -325,7 +324,7 @@
       <div id="omborEmpty" class="empty-note" style="display:none;">Hali mahsulot qo'shilmagan</div>
     </div>
   </div>
- 
+
   <!-- SKANER -->
   <div class="view" id="view-skaner">
     <div class="panel">
@@ -338,7 +337,7 @@
       <button class="secondary" id="saveApiKeyBtn">Kalitni saqlash</button>
       <div id="apiKeyStatus" class="scan-note" style="margin-top:8px;"></div>
     </div>
- 
+
     <div class="panel" style="margin-top:16px;">
       <h2>Linoleumni skanerlash</h2>
       <p class="scan-note">Kamerani namunaga qarating va suratga oling — ombordagi <strong>rasmi biriktirilgan</strong> mahsulotlar bilan solishtirilib, eng o'xshash 5 tasi ko'rsatiladi. Aniqlik taxminiy — kod/QR usuliga qaraganda kamroq ishonchli.</p>
@@ -351,7 +350,7 @@
       <h2>Eng o'xshash mahsulotlar</h2>
       <div id="scanResults"></div>
     </div>
- 
+
     <div class="panel" style="margin-top:16px;">
       <h2>Zaxira nusxa</h2>
       <p class="scan-note">Ma'lumot shu brauzerda saqlanadi. Boshqa qurilmaga o'tsangiz yoki brauzer keshini tozalasangiz yo'qolib ketmasligi uchun vaqti-vaqti bilan zaxira nusxa olib turing.</p>
@@ -363,7 +362,7 @@
       <div id="restoreStatus" class="scan-note" style="margin-top:10px;"></div>
     </div>
   </div>
- 
+
   <!-- HISOBOT -->
   <div class="view" id="view-hisobot">
     <div class="stat-cards">
@@ -374,19 +373,19 @@
       <div class="stat-card exp"><div class="slabel">Oylik chiqim</div><div class="sval" id="statExpenseMonth">0</div></div>
       <div class="stat-card profit"><div class="slabel">Sof foyda (bugun)</div><div class="sval" id="statProfitToday">0</div></div>
     </div>
- 
+
     <div class="panel">
       <h2>Eng ko'p sotilgan mahsulotlar (shu oy)</h2>
       <div id="topProducts"></div>
       <div id="topEmpty" class="empty-note" style="display:none;">Bu oyda sotuv bo'lmagan</div>
     </div>
- 
+
     <div class="panel" style="margin-top:16px;">
       <h2>So'nggi sotuvlar</h2>
       <div id="salesHistoryList"></div>
       <div id="salesHistoryEmpty" class="empty-note" style="display:none;">Hali sotuv bo'lmagan</div>
     </div>
- 
+
     <div class="panel" style="margin-top:16px;">
       <h2>Chiqim qo'shish</h2>
       <div class="row2">
@@ -400,10 +399,10 @@
   </div>
 </div>
 <div class="toast" id="toast"></div>
- 
+
 <script>
 const fmt = n => new Intl.NumberFormat('uz-UZ').format(Math.round(n));
- 
+
 // Brauzer xotirasi (localStorage) — GitHub Pages'da mustaqil ishlash uchun
 const localStore = {
   async get(key){
@@ -419,12 +418,12 @@ const localStore = {
     }catch(e){ return null; }
   }
 };
- 
+
 let products = [];
 let sales = [];
 let expenses = [];
 let cart = []; // {productId, name, price, qty}
- 
+
 function resizeImageFile(file, maxSize){
   return new Promise((resolve, reject)=>{
     const reader = new FileReader();
@@ -446,24 +445,24 @@ function resizeImageFile(file, maxSize){
     reader.readAsDataURL(file);
   });
 }
- 
+
 function showToast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), 1800);
 }
- 
+
 function setStatus(text){
   document.getElementById('statusTag').textContent = text;
 }
- 
+
 function formatDateTime(iso){
   const d = new Date(iso);
   const pad = n => String(n).padStart(2,'0');
   return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
- 
+
 async function loadData(){
   setStatus('yuklanmoqda...');
   try{
@@ -481,35 +480,35 @@ async function loadData(){
   setStatus('saqlangan');
   renderAll();
 }
- 
+
 async function saveProducts(){
   try{
     const r = await localStore.set('mahsulotlar', JSON.stringify(products));
     if(!r) showToast('Saqlashda xatolik');
   }catch(e){ showToast('Saqlashda xatolik: ' + e.message); }
 }
- 
+
 async function saveSales(){
   try{
     const r = await localStore.set('sotuvlar', JSON.stringify(sales));
     if(!r) showToast('Saqlashda xatolik');
   }catch(e){ showToast('Saqlashda xatolik: ' + e.message); }
 }
- 
+
 async function saveExpenses(){
   try{
     const r = await localStore.set('chiqimlar', JSON.stringify(expenses));
     if(!r) showToast('Saqlashda xatolik');
   }catch(e){ showToast('Saqlashda xatolik: ' + e.message); }
 }
- 
+
 function renderAll(){
   renderKassaList();
   renderReceipt();
   renderOmborTable();
   renderHisobot();
 }
- 
+
 // ---------- KASSA ----------
 function renderKassaList(){
   const el = document.getElementById('kassaProductList');
@@ -542,7 +541,7 @@ function renderKassaList(){
     el.appendChild(row);
   });
 }
- 
+
 function addToCart(product){
   if(product.qty <= 0){ showToast(`${product.name} — qoldiq yo'q`); return; }
   const existing = cart.find(c => c.productId === product.id);
@@ -554,7 +553,7 @@ function addToCart(product){
   }
   renderReceipt();
 }
- 
+
 function changeCartPrice(productId, newPriceStr){
   const price = parseFloat(newPriceStr);
   const item = cart.find(c => c.productId === productId);
@@ -562,7 +561,7 @@ function changeCartPrice(productId, newPriceStr){
   item.price = price;
   renderReceipt();
 }
- 
+
 function changeCartQty(productId, delta){
   const item = cart.find(c => c.productId === productId);
   const product = products.find(p => p.id === productId);
@@ -578,7 +577,7 @@ function changeCartQty(productId, delta){
   }
   renderReceipt();
 }
- 
+
 function setCartQty(productId, newQtyStr){
   const newQty = parseFloat(newQtyStr);
   const item = cart.find(c => c.productId === productId);
@@ -598,7 +597,7 @@ function setCartQty(productId, newQtyStr){
   item.qty = newQty;
   renderReceipt();
 }
- 
+
 function renderReceipt(){
   const el = document.getElementById('receiptItems');
   const totalEl = document.getElementById('receiptTotal');
@@ -630,13 +629,13 @@ function renderReceipt(){
   totalEl.textContent = fmt(total);
   sellBtn.disabled = false;
 }
- 
+
 async function finalizeSale(){
   if(cart.length === 0) return;
   const sellBtn = document.getElementById('sellBtn');
   sellBtn.disabled = true;
   sellBtn.textContent = 'Saqlanmoqda...';
- 
+
   const total = cart.reduce((s,i)=> s + i.price*i.qty, 0);
   const sale = {
     id: 'sale_' + Date.now(),
@@ -649,19 +648,19 @@ async function finalizeSale(){
     const product = products.find(p => p.id === item.productId);
     if(product) product.qty = Math.max(0, product.qty - item.qty);
   });
- 
+
   await Promise.all([saveSales(), saveProducts()]);
   cart = [];
   sellBtn.textContent = 'Sotish';
   showToast('Sotuv saqlandi: ' + fmt(total) + " so'm");
   renderAll();
 }
- 
+
 // ---------- OMBOR ----------
 let newImageData = null;
 let editingId = null;
 let editImageData = undefined;
- 
+
 async function handleNewImageFile(input){
   const file = input.files && input.files[0];
   if(!file) return;
@@ -672,17 +671,17 @@ async function handleNewImageFile(input){
     showToast('Rasmni yuklashda xatolik');
   }
 }
- 
+
 async function addProduct(){
   const name = document.getElementById('newName').value.trim();
   const doc = document.getElementById('newDoc').value.trim();
   const price = parseFloat(document.getElementById('newPrice').value);
   const qty = parseFloat(document.getElementById('newQty').value);
- 
+
   if(!name){ showToast('Nomini kiriting'); return; }
   if(isNaN(price) || price < 0){ showToast("Narxni to'g'ri kiriting"); return; }
   if(isNaN(qty) || qty < 0){ showToast("Qoldiqni to'g'ri kiriting"); return; }
- 
+
   products.push({id: 'prod_' + Date.now(), name, doc, price, qty, image: newImageData || null});
   await saveProducts();
   document.getElementById('newName').value = '';
@@ -695,19 +694,19 @@ async function addProduct(){
   showToast("Mahsulot qo'shildi");
   renderAll();
 }
- 
+
 let pendingDeleteId = null;
- 
+
 function requestDeleteProduct(id){
   pendingDeleteId = id;
   renderOmborTable();
 }
- 
+
 function cancelDeleteProduct(){
   pendingDeleteId = null;
   renderOmborTable();
 }
- 
+
 async function confirmDeleteProduct(id){
   products = products.filter(p => p.id !== id);
   pendingDeleteId = null;
@@ -715,20 +714,20 @@ async function confirmDeleteProduct(id){
   showToast("Mahsulot o'chirildi");
   renderAll();
 }
- 
+
 function startEditProduct(id){
   editingId = id;
   editImageData = undefined;
   pendingDeleteId = null;
   renderOmborTable();
 }
- 
+
 function cancelEditProduct(){
   editingId = null;
   editImageData = undefined;
   renderOmborTable();
 }
- 
+
 async function handleEditImageFile(input){
   const file = input.files && input.files[0];
   if(!file) return;
@@ -740,17 +739,17 @@ async function handleEditImageFile(input){
     showToast('Rasmni yuklashda xatolik');
   }
 }
- 
+
 async function saveEditProduct(id){
   const name = document.getElementById('edit-name').value.trim();
   const doc = document.getElementById('edit-doc').value.trim();
   const price = parseFloat(document.getElementById('edit-price').value);
   const qty = parseFloat(document.getElementById('edit-qty').value);
- 
+
   if(!name){ showToast('Nomini kiriting'); return; }
   if(isNaN(price) || price < 0){ showToast("Narxni to'g'ri kiriting"); return; }
   if(isNaN(qty) || qty < 0){ showToast("Qoldiqni to'g'ri kiriting"); return; }
- 
+
   const product = products.find(p => p.id === id);
   if(!product) return;
   product.name = name;
@@ -758,14 +757,14 @@ async function saveEditProduct(id){
   product.price = price;
   product.qty = qty;
   if(editImageData !== undefined) product.image = editImageData;
- 
+
   editingId = null;
   editImageData = undefined;
   await saveProducts();
   showToast('Mahsulot yangilandi');
   renderAll();
 }
- 
+
 async function updateStock(id, newQtyStr){
   const newQty = parseFloat(newQtyStr);
   if(isNaN(newQty) || newQty < 0) return;
@@ -775,7 +774,7 @@ async function updateStock(id, newQtyStr){
     await saveProducts();
   }
 }
- 
+
 function renderOmborTable(){
   const body = document.getElementById('omborTableBody');
   const emptyNote = document.getElementById('omborEmpty');
@@ -785,7 +784,7 @@ function renderOmborTable(){
     const tr = document.createElement('tr');
     const isPending = pendingDeleteId === p.id;
     const isEditing = editingId === p.id;
- 
+
     if(isEditing){
       const currentImg = editImageData !== undefined ? editImageData : p.image;
       const previewHtml = currentImg
@@ -818,11 +817,11 @@ function renderOmborTable(){
       body.appendChild(tr);
       return;
     }
- 
+
     const thumb = p.image
       ? `<img class="table-thumb" src="${p.image}">`
       : `<div class="table-thumb-placeholder">—</div>`;
- 
+
     tr.innerHTML = `
       <td>${thumb}</td>
       <td>${escapeHtml(p.name)}</td>
@@ -841,34 +840,34 @@ function renderOmborTable(){
     body.appendChild(tr);
   });
 }
- 
+
 // ---------- API KALIT ----------
 function getApiKey(){
-  return localStorage.getItem('anthropicApiKey') || '';
+  return localStorage.getItem('openaiApiKey') || '';
 }
- 
+
 function saveApiKey(){
   const key = document.getElementById('apiKeyInput').value.trim();
   const statusEl = document.getElementById('apiKeyStatus');
-  if(!key.startsWith('sk-ant-')){
-    statusEl.textContent = "Kalit noto'g'ri ko'rinadi (sk-ant- bilan boshlanishi kerak)";
+  if(!key.startsWith('sk-')){
+    statusEl.textContent = "Kalit noto'g'ri ko'rinadi (sk- bilan boshlanishi kerak)";
     return;
   }
-  localStorage.setItem('anthropicApiKey', key);
+  localStorage.setItem('openaiApiKey', key);
   document.getElementById('apiKeyInput').value = '';
   statusEl.textContent = 'Kalit saqlandi ✓';
 }
- 
+
 // ---------- SKANER ----------
 const SCAN_CTX = {
   skaner: { preview: 'scanPreviewWrap', status: 'scanStatus', resultsPanel: 'scanResultsPanel', results: 'scanResults' },
   kassa:  { preview: 'kassaScanPreviewWrap', status: 'kassaScanStatus', resultsPanel: 'kassaScanResultsPanel', results: 'kassaScanResults' }
 };
- 
+
 function base64Only(dataUrl){
   return dataUrl.split(',')[1];
 }
- 
+
 async function handleScanFile(input, context){
   const file = input.files && input.files[0];
   if(!file) return;
@@ -885,25 +884,25 @@ async function handleScanFile(input, context){
   document.getElementById(c.preview).innerHTML = `<img src="${imageData}">`;
   await performScan(imageData, context);
 }
- 
+
 async function performScan(scannedImageData, context){
   const c = SCAN_CTX[context];
   const statusEl = document.getElementById(c.status);
   const apiKey = getApiKey();
- 
+
   if(!apiKey){
     statusEl.textContent = "Avval Skaner bo'limida API kalitni kiritib saqlang.";
     return;
   }
- 
+
   const withImages = products.filter(p => p.image);
   if(withImages.length === 0){
     statusEl.textContent = "Hech qaysi mahsulotda rasm yo'q — avval Ombor bo'limida mahsulotlarga rasm qo'shing.";
     return;
   }
- 
+
   statusEl.textContent = `Solishtirilmoqda... (${withImages.length} ta mahsulot bilan)`;
- 
+
   const content = [
     { type: 'text', text: "Quyida do'kondagi mahsulotlar ro'yxati va har birining rasmi keladi (ID va nomi bilan)." }
   ];
@@ -914,28 +913,39 @@ async function performScan(scannedImageData, context){
   content.push({ type: 'text', text: 'Endi mijoz kamerada suratga olgan linoleum namunasi:' });
   content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64Only(scannedImageData) } });
   content.push({ type: 'text', text: 'Yuqoridagi ro\'yxatdagi mahsulotlardan ushbu namunaga naqsh, rang va tekstura bo\'yicha eng o\'xshash 5 tasini top. FAQAT quyidagi JSON massivini qaytar, boshqa hech qanday matn, izoh yoki ```json belgisi qo\'shma: [{"id":"mahsulot_id","score":0-100 son,"reason":"o\'zbek tilida bir qisqa jumla"}] — score kamayish tartibida.' });
- 
+
   try{
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const openaiContent = content.map(item=>{
+      if(item.type === 'text'){
+        return { type: 'input_text', text: item.text };
+      }
+      if(item.type === 'image'){
+        return {
+          type: 'input_image',
+          image_url: `data:${item.source.media_type};base64,${item.source.data}`
+        };
+      }
+      return item;
+    });
+
+    const response = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
+        'Authorization': 'Bearer ' + apiKey
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content }]
+        model: 'gpt-4.1-mini',
+        input: [{ role: 'user', content: openaiContent }],
+        max_output_tokens: 1000
       })
     });
     const data = await response.json();
-    if(data.error){
-      statusEl.textContent = 'API xatolik: ' + data.error.message;
+    if(!response.ok){
+      statusEl.textContent = 'API xatolik: ' + (data.error?.message || 'Nomaʼlum xatolik');
       return;
     }
-    const textBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
+    const textBlocks = data.output_text || '';
     const clean = textBlocks.replace(/```json|```/g, '').trim();
     let matches;
     try{
@@ -950,20 +960,20 @@ async function performScan(scannedImageData, context){
     statusEl.textContent = 'Xatolik: ' + e.message;
   }
 }
- 
+
 function renderScanResults(matches, context){
   const c = SCAN_CTX[context];
   const panel = document.getElementById(c.resultsPanel);
   const el = document.getElementById(c.results);
   el.innerHTML = '';
- 
+
   const valid = (matches || []).filter(m => products.find(p => p.id === m.id)).slice(0, 5);
   if(valid.length === 0){
     panel.style.display = 'block';
     el.innerHTML = '<div class="empty-note">Mos mahsulot topilmadi</div>';
     return;
   }
- 
+
   valid.forEach(m=>{
     const product = products.find(p => p.id === m.id);
     const score = Math.max(0, Math.min(100, Math.round(m.score || 0)));
@@ -983,7 +993,7 @@ function renderScanResults(matches, context){
   });
   panel.style.display = 'block';
 }
- 
+
 function selectScanResult(productId, context){
   const product = products.find(p => p.id === productId);
   if(!product) return;
@@ -993,7 +1003,7 @@ function selectScanResult(productId, context){
     document.querySelector('.tab-btn[data-view="kassa"]').click();
   }
 }
- 
+
 // ---------- ZAXIRA NUSXA ----------
 function exportBackup(){
   const data = { products, sales, expenses, exportedAt: new Date().toISOString() };
@@ -1008,9 +1018,9 @@ function exportBackup(){
   URL.revokeObjectURL(url);
   showToast('Zaxira nusxa yuklab olindi');
 }
- 
+
 let pendingRestoreData = null;
- 
+
 function handleRestoreFile(input){
   const file = input.files && input.files[0];
   if(!file) return;
@@ -1031,7 +1041,7 @@ function handleRestoreFile(input){
   };
   reader.readAsText(file);
 }
- 
+
 async function applyRestore(){
   if(!pendingRestoreData) return;
   products = pendingRestoreData.products || [];
@@ -1044,20 +1054,20 @@ async function applyRestore(){
   showToast("Ma'lumotlar tiklandi");
   renderAll();
 }
- 
+
 function cancelRestore(){
   pendingRestoreData = null;
   document.getElementById('restoreStatus').textContent = '';
   document.getElementById('restoreInput').value = '';
 }
- 
+
 // ---------- CHIQIM ----------
 async function addExpense(){
   const amount = parseFloat(document.getElementById('newExpenseAmount').value);
   const note = document.getElementById('newExpenseNote').value.trim();
- 
+
   if(isNaN(amount) || amount <= 0){ showToast("Summani to'g'ri kiriting"); return; }
- 
+
   expenses.push({
     id: 'exp_' + Date.now(),
     timestamp: new Date().toISOString(),
@@ -1070,32 +1080,32 @@ async function addExpense(){
   showToast("Chiqim qo'shildi");
   renderAll();
 }
- 
+
 let pendingDeleteExpenseId = null;
- 
+
 function requestDeleteExpense(id){
   pendingDeleteExpenseId = id;
   renderExpenseList();
 }
- 
+
 function cancelDeleteExpense(){
   pendingDeleteExpenseId = null;
   renderExpenseList();
 }
- 
+
 async function confirmDeleteExpense(id){
   expenses = expenses.filter(e => e.id !== id);
   pendingDeleteExpenseId = null;
   await saveExpenses();
   renderAll();
 }
- 
+
 function renderExpenseList(){
   const el = document.getElementById('expenseList');
   const emptyNote = document.getElementById('expenseEmpty');
   el.innerHTML = '';
   emptyNote.style.display = expenses.length === 0 ? 'block' : 'none';
- 
+
   const sorted = [...expenses].sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 30);
   sorted.forEach(e=>{
     const row = document.createElement('div');
@@ -1115,14 +1125,14 @@ function renderExpenseList(){
     el.appendChild(row);
   });
 }
- 
+
 // ---------- SOTUV TARIXI ----------
 function renderSalesHistory(){
   const el = document.getElementById('salesHistoryList');
   const emptyNote = document.getElementById('salesHistoryEmpty');
   el.innerHTML = '';
   emptyNote.style.display = sales.length === 0 ? 'block' : 'none';
- 
+
   const sorted = [...sales].sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 50);
   sorted.forEach(s=>{
     const row = document.createElement('div');
@@ -1138,35 +1148,35 @@ function renderSalesHistory(){
     el.appendChild(row);
   });
 }
- 
+
 // ---------- HISOBOT ----------
 function renderHisobot(){
   const now = new Date();
   const todayStr = now.toISOString().slice(0,10);
   const monthStr = now.toISOString().slice(0,7);
- 
+
   const todayTotal = sales.filter(s => s.timestamp.slice(0,10) === todayStr)
     .reduce((sum,s)=> sum + s.total, 0);
   const monthSales = sales.filter(s => s.timestamp.slice(0,7) === monthStr);
   const monthTotal = monthSales.reduce((sum,s)=> sum + s.total, 0);
   const stockValue = products.reduce((sum,p)=> sum + p.price * p.qty, 0);
- 
+
   const expenseToday = expenses.filter(e => e.timestamp.slice(0,10) === todayStr)
     .reduce((sum,e)=> sum + e.amount, 0);
   const expenseMonth = expenses.filter(e => e.timestamp.slice(0,7) === monthStr)
     .reduce((sum,e)=> sum + e.amount, 0);
   const profitToday = todayTotal - expenseToday;
- 
+
   document.getElementById('statToday').textContent = fmt(todayTotal);
   document.getElementById('statMonth').textContent = fmt(monthTotal);
   document.getElementById('statStockValue').textContent = fmt(stockValue);
   document.getElementById('statExpenseToday').textContent = fmt(expenseToday);
   document.getElementById('statExpenseMonth').textContent = fmt(expenseMonth);
   document.getElementById('statProfitToday').textContent = fmt(profitToday);
- 
+
   renderExpenseList();
   renderSalesHistory();
- 
+
   const productTotals = {};
   monthSales.forEach(s=>{
     s.items.forEach(item=>{
@@ -1190,13 +1200,13 @@ function renderHisobot(){
     topEl.appendChild(row);
   });
 }
- 
+
 function escapeHtml(str){
   const div = document.createElement('div');
   div.textContent = str ?? '';
   return div.innerHTML;
 }
- 
+
 // ---------- NAV ----------
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -1206,15 +1216,14 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     document.getElementById('view-' + btn.dataset.view).classList.add('active');
   });
 });
- 
+
 document.getElementById('sellBtn').addEventListener('click', finalizeSale);
 document.getElementById('addProductBtn').addEventListener('click', addProduct);
 document.getElementById('addExpenseBtn').addEventListener('click', addExpense);
 document.getElementById('saveApiKeyBtn').addEventListener('click', saveApiKey);
 document.getElementById('exportBtn').addEventListener('click', exportBackup);
- 
+
 loadData();
 </script>
 </body>
 </html>
- 
