@@ -849,20 +849,56 @@ function saveApiKey(){ return true; }
 async function loadLocalVisionModel(){
   if(localVisionModel) return localVisionModel;
   if(localVisionLoading) return localVisionLoading;
-  const statusEls = [document.getElementById('apiKeyStatus')].filter(Boolean);
-  const setStatus = msg => statusEls.forEach(el => el.textContent = msg);
+
+  const statusEl = document.getElementById('apiKeyStatus');
+  const setStatus = msg => {
+    if(statusEl) statusEl.textContent = msg;
+  };
+
   localVisionLoading = (async()=>{
-    setStatus('Model holati: yuklanmoqda...');
-    if(typeof tf === 'undefined' || typeof mobilenet === 'undefined'){
-      throw new Error('Local AI kutubxonasi yuklanmadi. Internet ulanishini tekshiring.');
+    try{
+      setStatus('Model holati: TensorFlow yuklanmoqda...');
+
+      if(typeof tf === 'undefined'){
+        throw new Error('TensorFlow yuklanmadi. Internet/CDN ulanishini tekshiring.');
+      }
+
+      await tf.ready();
+      setStatus('Model holati: TensorFlow tayyor ✓');
+
+      if(typeof mobilenet === 'undefined'){
+        throw new Error('MobileNet kutubxonasi yuklanmadi. Internet/CDN ulanishini tekshiring.');
+      }
+
+      setStatus('Model holati: AI modeli yuklanmoqda...');
+
+      // Do not leave the UI stuck forever if the CDN/model request hangs.
+      const model = await Promise.race([
+        mobilenet.load({version: 2, alpha: 1.0}),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Model 60 soniyada yuklanmadi. Internetni tekshiring va sahifani qayta yuklang.')), 60000)
+        )
+      ]);
+
+      if(!model || typeof model.infer !== 'function'){
+        throw new Error('AI modeli yuklandi, lekin ishlashga tayyor emas.');
+      }
+
+      localVisionModel = model;
+      setStatus('Model holati: tayyor ✓');
+      return localVisionModel;
+    }catch(e){
+      console.error('Local AI:', e);
+      setStatus('Model holati: XATO — ' + (e.message || e) + ' | Qayta urinish uchun sahifani yangilang.');
+      throw e;
     }
-    await tf.ready();
-    localVisionModel = await mobilenet.load({version: 2, alpha: 1.0});
-    setStatus('Model holati: tayyor ✓');
-    return localVisionModel;
   })();
-  try { return await localVisionLoading; }
-  finally { localVisionLoading = null; }
+
+  try{
+    return await localVisionLoading;
+  }finally{
+    localVisionLoading = null;
+  }
 }
 
 function imageElementFromDataUrl(dataUrl){
