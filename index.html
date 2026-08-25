@@ -3,214 +3,233 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Linoleum — Do'kon tizimi</title>
+  <title>Linoleum - Boshqaruv Tizimi</title>
+
+  <!-- Google Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- TensorFlow.js & MobileNet (AI Skaner uchun) -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js"></script>
+
+  <!-- CSS faylni ulash -->
   <link rel="stylesheet" href="index.css">
 </head>
 <body>
 
-<div class="app">
-  <header>
-    <div class="brand">
-      <div class="logo">🧱</div>
-      <div>
-        <h1>Linoleum — Do'kon tizimi</h1>
-        <div class="sub">Kassa · Ombor · Skaner · Hisobot</div>
-      </div>
+  <header class="app-header">
+    <div class="logo">
+      <span class="logo-icon">📐</span>
+      <h1>Linoleum POS</h1>
+      <span id="statusTag" class="status-badge">tayyor</span>
     </div>
-    <span class="tag" id="statusTag">yuklanmoqda...</span>
+    <div class="header-actions">
+      <button class="btn-secondary" onclick="toggleTgSettings()">⚙️ Bot Sozlamalari</button>
+    </div>
   </header>
 
-  <nav>
-    <button class="tab-btn active" data-view="kassa" onclick="switchTab('kassa')">💵 Kassa</button>
+  <!-- Telegram Sozlamalar Pop-up -->
+  <div id="tgSettingsPopup" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h3>Telegram Bot Sozlamalari</h3>
+      <div class="form-group">
+        <label>Bot Token:</label>
+        <input type="text" id="tgBotToken" placeholder="123456789:ABCdef...">
+      </div>
+      <div class="form-group">
+        <label>Chat ID:</label>
+        <input type="text" id="tgChatId" placeholder="987654321">
+      </div>
+      <div class="modal-actions">
+        <button class="btn-primary" onclick="saveTgSettings()">Saqlash</button>
+        <button class="btn-secondary" onclick="toggleTgSettings()">Yopish</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Asosiy Navigatsiya -->
+  <nav class="app-nav">
+    <button class="tab-btn active" data-view="kassa" onclick="switchTab('kassa')">🛒 Kassa</button>
     <button class="tab-btn" data-view="ombor" onclick="switchTab('ombor')">📦 Ombor</button>
-    <button class="tab-btn" data-view="skaner" onclick="switchTab('skaner')">📷 Skaner</button>
-    <button class="tab-btn" data-view="hisobot" onclick="switchTab('hisobot')">📊 Hisobot</button>
+    <button class="tab-btn" data-view="hisobot" onclick="switchTab('hisobot')">📊 Hisobotlar</button>
   </nav>
 
-  <!-- KASSA -->
-  <div class="view active" id="view-kassa">
-    <div class="grid">
-      <div class="panel">
-        <h2>Mahsulotlar</h2>
-        <div id="kassaProductList"></div>
-      </div>
-      <div class="receipt">
-        <h2 style="margin-bottom:10px;">🧾 Chek</h2>
-        <div class="receipt-items" id="receiptItems">
-          <div class="receipt-empty">Savat bo'sh</div>
+  <main class="app-content">
+
+    <!-- 1. KASSA BO'LIMI -->
+    <section id="view-kassa" class="view active">
+      <div class="grid-2col">
+        <!-- Chap tomondagi Mahsulotlar Ro'yxati -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Mahsulotlar</h2>
+            <button class="btn-small" onclick="switchTab('ombor')">+ Yangi qo'shish</button>
+          </div>
+          <div id="kassaProductList" class="product-grid"></div>
         </div>
-        <div class="receipt-total">
-          <span class="label">Jami</span>
-          <span class="value" id="receiptTotal">0</span>
-        </div>
-        <button class="primary" id="sellBtn" onclick="checkout()" disabled>Sotish</button>
-      </div>
-    </div>
 
-    <!-- KASSA SKANER -->
-    <div class="panel" style="margin-top:16px;">
-      <h2>Tez skanerlash (AI)</h2>
-      <div class="mode-switch">
-        <button type="button" class="mode-switch-btn active" id="kassaBtnModeFile" onclick="setCameraMode('file', 'kassa')">📁 Standard (Surat/Fayl)</button>
-        <button type="button" class="mode-switch-btn" id="kassaBtnModeLive" onclick="setCameraMode('live', 'kassa')">📹 Jonli Kamera</button>
-      </div>
-
-      <div class="camera-container" id="kassaCameraWrap">
-        <video id="kassaWebcamVideo" autoplay playsinline></video>
-      </div>
-
-      <button type="button" class="white-scan-btn" id="kassaSnapAndScanBtn" style="display:none;" onclick="snapAndScan('kassa')">📸 Suratga olish va qidirish</button>
-
-      <div id="kassaFileScanContainer">
-        <label class="scan-upload-btn" for="kassaScanInput" style="width:100%; text-align:center;">📷 Suratga olish / rasm tanlash</label>
-        <input type="file" id="kassaScanInput" accept="image/*" capture="environment" onchange="handleScanFile(this,'kassa')" style="display:none;">
-      </div>
-
-      <div class="scan-preview" id="kassaScanPreviewWrap"></div>
-      <div class="scan-status" id="kassaScanStatus"></div>
-      
-      <div id="kassaScanResultsPanel" style="display:none; margin-top:12px;">
-        <h2 style="font-size:11px;">Topilgan mahsulotlar:</h2>
-        <div id="kassaScanResults"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- OMBOR -->
-  <div class="view" id="view-ombor">
-    <div class="panel">
-      <h2>Yangi mahsulot qo'shish</h2>
-      <div class="img-upload-row">
-        <div id="newImagePreviewWrap"><div class="img-preview-placeholder">Rasm yo'q</div></div>
-        <div style="flex:1;">
-          <label>Mahsulot rasmi</label>
-          <input type="file" id="newImageInput" accept="image/*" onchange="handleNewImageFile(this)">
-        </div>
-      </div>
-      <div class="row2">
-        <div class="field"><label>Nomi</label><input id="newName" placeholder="masalan: Tarkett Premium 3m"></div>
-        <div class="field"><label>Hujjat raqami</label><input id="newDoc" placeholder="ishlab chiqaruvchi kodi"></div>
-      </div>
-      <div class="row2">
-        <div class="field"><label>Narxi (so'm / m)</label><input id="newPrice" type="number" placeholder="0"></div>
-        <div class="field"><label>Boshlang'ich qoldiq (m)</label><input id="newQty" type="number" placeholder="0"></div>
-      </div>
-      <button class="secondary" id="addProductBtn" style="width:100%;" onclick="addNewProduct()">+ Qo'shish</button>
-    </div>
-    <div class="panel" style="margin-top:16px;">
-      <h2>Ombordagi mahsulotlar</h2>
-      <div class="field" style="margin-bottom:14px;">
-        <input type="text" id="omborSearchInput" placeholder="🔍 Hujjat raqami yoki nomi bo'yicha qidiruv..." oninput="renderOmborTable()">
-      </div>
-      <table>
-        <thead>
-          <tr><th></th><th>Nomi</th><th>Hujjat №</th><th class="num">Narx (so'm/m)</th><th class="num">Qoldiq (m)</th><th>Amallar</th></tr>
-        </thead>
-        <tbody id="omborTableBody"></tbody>
-      </table>
-      <div id="omborEmpty" class="empty-note" style="display:none;">Hali mahsulot qo'shilmagan</div>
-    </div>
-  </div>
-
-  <!-- SKANER -->
-  <div class="view" id="view-skaner">
-    <div class="panel">
-      <h2>Linoleumni skanerlash (Local AI)</h2>
-      <p class="scan-note">Kamerani namunaga qarating va oq tugma yordamida suratga oling — ombordagi <strong>rasmi biriktirilgan</strong> mahsulotlar bilan solishtiriladi.</p>
-      
-      <div class="mode-switch">
-        <button type="button" class="mode-switch-btn active" id="btnModeFile" onclick="setCameraMode('file', 'skaner')">📁 Standard (Surat/Fayl)</button>
-        <button type="button" class="mode-switch-btn" id="btnModeLive" onclick="setCameraMode('live', 'skaner')">📹 Jonli Kamera</button>
-      </div>
-
-      <div class="camera-container" id="cameraWrap">
-        <video id="webcamVideo" autoplay playsinline></video>
-      </div>
-
-      <button type="button" class="white-scan-btn" id="snapAndScanBtn" style="display:none;" onclick="snapAndScan('skaner')">📸 Suratga olish va qidirish</button>
-
-      <div id="fileScanContainer">
-        <label class="scan-upload-btn" for="scanInput" style="width:100%; text-align:center;">📷 Suratga olish / rasm tanlash</label>
-        <input type="file" id="scanInput" accept="image/*" capture="environment" onchange="handleScanFile(this,'skaner')" style="display:none;">
-      </div>
-
-      <div class="scan-preview" id="scanPreviewWrap"></div>
-      <div class="scan-status" id="scanStatus"></div>
-    </div>
-
-    <div class="panel" id="scanResultsPanel" style="margin-top:16px; display:none;">
-      <h2>Eng o'xshash mahsulotlar</h2>
-      <div id="scanResults"></div>
-    </div>
-
-    <div class="panel" style="margin-top:16px;">
-      <h2>Zaxira nusxa</h2>
-      <p class="scan-note">Ma'lumot shu brauzerda saqlanadi. Boshqa qurilmaga o'tsangiz zaxira nusxa olib turing.</p>
-      <div class="settings-row">
-        <button class="secondary" id="exportBtn" onclick="exportData()">⬇️ Zaxira nusxa yuklab olish</button>
-        <label class="secondary" for="restoreInput" style="cursor:pointer;">⬆️ Fayldan tiklash</label>
-        <input type="file" id="restoreInput" accept="application/json" onchange="handleRestoreFile(this)" style="display:none;">
-      </div>
-      <div id="restoreStatus" class="scan-note" style="margin-top:10px;"></div>
-    </div>
-  </div>
-
-  <!-- HISOBOT -->
-  <div class="view" id="view-hisobot">
-    <div class="stat-cards">
-      <div class="stat-card"><div class="slabel">Bugungi savdo</div><div class="sval" id="statToday">0</div></div>
-      <div class="stat-card"><div class="slabel">Shu oy savdo</div><div class="sval" id="statMonth">0</div></div>
-      <div class="stat-card"><div class="slabel">Ombor qiymati</div><div class="sval" id="statStockValue">0</div></div>
-      <div class="stat-card exp"><div class="slabel">Bugungi chiqim</div><div class="sval" id="statExpenseToday">0</div></div>
-      <div class="stat-card exp"><div class="slabel">Oylik chiqim</div><div class="sval" id="statExpenseMonth">0</div></div>
-      <div class="stat-card profit"><div class="slabel">Sof foyda (bugun)</div><div class="sval" id="statProfitToday">0</div></div>
-    </div>
-
-    <div class="panel" style="margin-bottom:16px;">
-      <h2>
-        <span>🤖 Telegram Bot</span>
-        <button class="dots-btn" onclick="toggleTgSettings()" title="Bot Sozlamalari">⋮</button>
-      </h2>
-
-      <div id="tgSettingsPopup" class="tg-settings-popup">
-        <div class="row2">
-          <div class="field"><label>Bot Token</label><input type="password" id="tgBotToken" placeholder="123456789:ABCdef..." onchange="saveTgSettings()"></div>
-          <div class="field"><label>Chat ID</label><input type="text" id="tgChatId" placeholder="987654321" onchange="saveTgSettings()"></div>
+        <!-- O'ng tomondagi Savat (Chek) -->
+        <div class="card">
+          <h2>Xarid Cheki</h2>
+          <div id="receiptItems" class="receipt-list">
+            <div class="receipt-empty">Savat bo'sh</div>
+          </div>
+          <div class="receipt-footer">
+            <div class="total-row">
+              <span>Jami summa:</span>
+              <span class="total-amount"><strong id="receiptTotal">0</strong> so'm</span>
+            </div>
+            <button id="sellBtn" class="btn-success btn-block" disabled onclick="checkout()">Sotuvni Yakunlash</button>
+          </div>
         </div>
       </div>
 
-      <button class="secondary" style="width:100%;" onclick="sendTelegramReport()">📤 Hisobotni Telegramga yuborish</button>
-    </div>
+      <!-- Kassa AI Skaneri -->
+      <div class="card margin-top">
+        <h2>📷 AI Skaner orqali qidirish</h2>
+        <div class="scan-controls">
+          <button id="kassaBtnModeFile" class="btn-secondary active" onclick="setCameraMode('file', 'kassa')">📁 Rasm Yuklash</button>
+          <button id="kassaBtnModeLive" class="btn-secondary" onclick="setCameraMode('live', 'kassa')">📹 Kamera</button>
+        </div>
 
-    <div class="panel">
-      <h2>Eng ko'p sotilgan mahsulotlar (shu oy)</h2>
-      <div id="topProducts"></div>
-      <div id="topEmpty" class="empty-note" style="display:none;">Bu oyda sotuv bo'lmagan</div>
-    </div>
+        <div id="kassaFileScanContainer" class="scan-box">
+          <input type="file" id="kassaScanFileInput" accept="image/*" onchange="handleScanFile(this, 'kassa')">
+        </div>
 
-    <div class="panel" style="margin-top:16px;">
-      <h2>So'nggi sotuvlar</h2>
-      <div id="salesHistoryList"></div>
-      <div id="salesHistoryEmpty" class="empty-note" style="display:none;">Hali sotuv bo'lmagan</div>
-    </div>
+        <div id="kassaCameraWrap" class="camera-wrap" style="display:none;">
+          <video id="kassaWebcamVideo" autoplay playsinline></video>
+        </div>
 
-    <div class="panel" style="margin-top:16px;">
-      <h2>Chiqim qo'shish</h2>
-      <div class="row2">
-        <div class="field"><label>Summasi (so'm)</label><input id="newExpenseAmount" type="number" placeholder="0"></div>
-        <div class="field"><label>Izoh</label><input id="newExpenseNote" placeholder="masalan: yetkazib berish, ijara"></div>
+        <button id="kassaSnapAndScanBtn" class="btn-primary margin-top" style="display:none;" onclick="snapAndScan('kassa')">Rasmga Olish va Skanerlash</button>
+
+        <div id="kassaScanPreviewWrap" class="preview-wrap"></div>
+        <div id="kassaScanStatus" class="scan-status"></div>
+
+        <div id="kassaScanResultsPanel" class="scan-results-panel" style="display:none;">
+          <h3>O'xshash Mahsulotlar:</h3>
+          <div id="kassaScanResults"></div>
+        </div>
       </div>
-      <button class="secondary" id="addExpenseBtn" style="width:100%;" onclick="addExpense()">+ Chiqim qo'shish</button>
-      <div id="expenseList" style="margin-top:14px;"></div>
-      <div id="expenseEmpty" class="empty-note" style="display:none;">Hali chiqim yozilmagan</div>
-    </div>
-  </div>
-</div>
+    </section>
 
-<div class="toast" id="toast"></div>
+    <!-- 2. OMBOR BO'LIMI -->
+    <section id="view-ombor" class="view">
+      <div class="card">
+        <h2>Yangi Mahsulot Qo'shish</h2>
+        <div class="form-grid">
+          <input type="text" id="newName" placeholder="Mahsulot nomi (masalan: Linoleum 3mm)">
+          <input type="text" id="newDoc" placeholder="Hujjat / Seriya raqami">
+          <input type="number" id="newPrice" placeholder="Narxi (1m2 uchun)">
+          <input type="number" id="newQty" placeholder="Qoldiq (metr)">
+          <div class="file-input-wrap">
+            <input type="file" id="newImageInput" accept="image/*" onchange="handleNewImageFile(this)">
+            <div id="newImagePreviewWrap">
+              <div class="img-preview-placeholder">Rasm biriktirish</div>
+            </div>
+          </div>
+          <button class="btn-primary" onclick="addNewProduct()">Qo'shish</button>
+        </div>
+      </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
-<script src="app.js"></script>
+      <div class="card margin-top">
+        <div class="card-header">
+          <h2>Ombordagi Mahsulotlar</h2>
+          <input type="text" id="omborSearchInput" placeholder="Qidirish..." oninput="renderOmborTable()">
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Rasm</th>
+                <th>Nomi</th>
+                <th>Hujjat</th>
+                <th>Narx</th>
+                <th>Qoldiq</th>
+                <th>Amallar</th>
+              </tr>
+            </thead>
+            <tbody id="omborTableBody"></tbody>
+          </table>
+          <div id="omborEmpty" class="empty-note" style="display:none;">Mahsulotlar topilmadi</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. HISOBOT BO'LIMI -->
+    <section id="view-hisobot" class="view">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-title">Bugungi Savdo</span>
+          <span id="statToday" class="stat-value">0</span> so'm
+        </div>
+        <div class="stat-card">
+          <span class="stat-title">Oylik Savdo</span>
+          <span id="statMonth" class="stat-value">0</span> so'm
+        </div>
+        <div class="stat-card">
+          <span class="stat-title">Ombor Qiymati</span>
+          <span id="statStockValue" class="stat-value">0</span> so'm
+        </div>
+        <div class="stat-card">
+          <span class="stat-title">Bugungi Sof Foyda</span>
+          <span id="statProfitToday" class="stat-value">0</span> so'm
+        </div>
+      </div>
+
+      <div class="grid-2col margin-top">
+        <!-- Chiqimlar -->
+        <div class="card">
+          <h2>Chiqim Qo'shish</h2>
+          <div class="form-group">
+            <input type="number" id="newExpenseAmount" placeholder="Summa">
+          </div>
+          <div class="form-group">
+            <input type="text" id="newExpenseNote" placeholder="Izoh (masalan: Tushlik)">
+          </div>
+          <button class="btn-primary" onclick="addExpense()">Chiqimni Saqlash</button>
+
+          <h3 class="margin-top">So'nggi Chiqimlar</h3>
+          <div id="expenseList" class="history-list"></div>
+          <div id="expenseEmpty" class="empty-note">Chiqimlar yo'q</div>
+        </div>
+
+        <!-- Yuborish & Backup -->
+        <div class="card">
+          <h2>Telegram & Zaxira (Backup)</h2>
+          <button class="btn-success btn-block" onclick="sendTelegramReport()">📲 Telegramga Kunlik Hisobotni Yuborish</button>
+          <hr class="divider">
+          <div class="form-grid">
+            <button class="btn-secondary" onclick="exportData()">💾 Ma'lumotlarni Yuklab Olish (Backup)</button>
+            <label class="btn-secondary file-upload-btn">
+              📂 Qayta Tiklash (Restore)
+              <input type="file" accept=".json" onchange="handleRestoreFile(this)" style="display:none;">
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Mahsulotlar & Tarix -->
+      <div class="grid-2col margin-top">
+        <div class="card">
+          <h2>Eng Ko'p Sotilgan Mahsulotlar (Oylik)</h2>
+          <div id="topProducts" class="bar-chart"></div>
+          <div id="topEmpty" class="empty-note">Sotuvlar yo'q</div>
+        </div>
+        <div class="card">
+          <h2>So'nggi Sotuvlar Tarixi</h2>
+          <div id="salesHistoryList" class="history-list"></div>
+          <div id="salesHistoryEmpty" class="empty-note">Sotuvlar yo'q</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <!-- JavaScript faylni ulash -->
+  <script src="app.js"></script>
 </body>
 </html>
